@@ -1,0 +1,221 @@
+# Copy to config.yaml and customize.
+host: "127.0.0.1"
+port: 7860
+log_level: "info"
+
+launcher:
+  auto_start_comfyui: true
+  comfyui_headless: true
+  hide_console: true
+  comfyui_path: auto
+  comfyui_url: "http://127.0.0.1:8188"
+  startup_timeout_seconds: 180
+  wait_for_comfyui: true
+  block_on_comfyui_timeout: false
+  auto_download_models: false
+  react_ui_enabled: true
+  node_api_port: 3000
+  open_browser: true
+
+history:
+  enabled: true
+  dir: "./data/logs/generation_history"
+  retention_days: 30
+  auto_purge_on_startup: true
+
+learning:
+  enabled: true
+  data_dir: "./data/learning"
+  feedback_enabled: true
+  preference_learning: true
+  knowledge_extraction: true
+  reflect_enabled: true
+  reflect_max_retries: 2
+  min_quality_score: 0.55
+
+repair:
+  interval_seconds: 30
+  max_retries: 2
+  generation_max_retries: 2
+  mode: full_auto
+  code_repair_enabled: true
+  auto_git_commit: true
+  run_tests_after_fix: true
+  max_auto_repairs_per_hour: 3
+  watchdog:
+    enabled: true
+    check_ollama: true
+    check_comfyui: true
+    restart_comfyui: true
+  orchestrator:
+    enabled: true
+    interval_seconds: 60
+    check_discord: true
+    check_monsterlock: true
+    check_ollama: true
+    check_api: true
+    auto_recover_monsterlock: true
+
+persona:
+  enabled: true
+  default_mode: grok
+  allow_user_override: true
+  grok:
+    humor: high
+    directness: high
+    uncensored: true
+
+llm:
+  ollama_url: "http://127.0.0.1:11434"
+  model: "llama3.2:latest"
+  num_ctx: 4096
+  temperature: 0.8
+  timeout_seconds: 120
+
+profiles:
+  rtx_4060:
+    model: "llama3.2:latest"
+    num_ctx: 4096
+  rtx_4090:
+    model: "llama3.1:8b"
+    num_ctx: 8192
+
+modules:
+  chat:
+    enabled: true
+  roleplay:
+    enabled: true
+    max_history: 40
+    memory_summary_interval: 20
+  image:
+    enabled: true
+    comfyui_url: "http://127.0.0.1:8188"
+    checkpoint: "auto"
+    lora_strength: 0.8
+    output_dir: "./data/outputs/images"
+    quality:
+      enabled: true
+      mode: rules
+      device: cpu
+      max_retries: 3
+      min_clip_score: 0.18
+      min_aesthetic: 4.5
+      save_bad: true
+      save_good: true
+      escalate_after: 3
+      fallback_checkpoint: auto
+      allow_high_saturation: false
+      allow_dark_style: false
+      add_quality_tags: true
+      data_dir: "./data/quality"
+  video:
+    enabled: true
+    comfyui_url: "http://127.0.0.1:8188"
+    training_materials_dir: "C:/MonsterAI/Training generative video"
+    mode: "animatediff"
+    max_frames: 16
+    fps: 8
+    width: 512
+    height: 512
+    steps: 15
+    output_format: mp4
+    require_ffmpeg: true
+    temp_dir: "./data/tmp"
+  tts:
+    enabled: true
+    engine: "piper"
+    piper_voice: "en_US-lessac-medium"
+    xtts_enabled: false
+  prompt:
+    enabled: true
+  discord:
+    enabled: false
+    token_env: "MONSTER_DISCORD_TOKEN"
+    application_id_env: "MONSTER_DISCORD_APP_ID"
+    guard:
+      enabled: true
+      mode: embedded
+      protection_level: standard
+      action_mode: delete_warn
+      ai_backend: auto
+      monster_ai_url: ""
+      chat_bridge_enabled: true
+      chat_rate_limit_per_minute: 10
+      data_dir: "./data/guard"
+      self_heal_enabled: true
+      self_heal_interval_seconds: 60
+      self_heal_max_backoff_seconds: 300
+  training:
+    enabled: false
+
+protection:
+  rate_limit_per_minute: 60
+  allowed_data_roots:
+    - "./data"
+  monsterlock:
+    enabled: true
+    strength: strict
+    hardened_mode: true
+    hardware_binding: true
+    bind_gpu: true
+    auto_bind_on_first_run: true
+    block_on_mismatch: true
+    integrity_check_enabled: true
+    digital_signatures_enabled: true
+    check_interval_seconds: 30
+    auto_repair: true
+    block_on_tamper: true
+    anti_debug_enabled: true
+    anti_debug_block_threshold: 60
+    block_on_analysis: true
+    behavior_monitor_enabled: true
+    credential_rotation_enabled: true
+    credential_rotation_seconds: 0.1
+    config_guard_enabled: true
+    self_destruct_enabled: true
+    self_destruct_on_tamper: true
+    self_destruct_on_analysis: true
+    corrupt_assets_on_destruct: true
+    force_exit_on_destruct: false
+    data_dir: "./data/monsterlock"
+    rule_sync_url: ""
+    encrypt_assets_on_setup: false
+  crimeguard:
+    enabled: true
+    locale: zh-HK
+    llm_analysis_enabled: true
+    vpn_detection_enabled: true
+    device_contact_detection_enabled: true
+    device_contact_scan_interval_seconds: 10
+    device_contact_lock_on_high_risk: true
+    device_contact_lock_min_score: 70
+    escalate_usb_bluetooth_lock: false
+    network_lock_enabled: true
+    lock_mode: localhost_only
+    auto_lock_on_crime: true
+    vpn_lock_on_high_risk: true
+    recovery_token: "MONSTER-RECOVER-2026"
+    data_dir: "./data/crimeguard"
+    rules_sync_url: ""
+  callguard:
+    enabled: true
+    auto_reject_threshold: 85
+    data_dir: "./data/callguard"
+    hk_hotline: "18222"
+  firewall:
+    enabled: true
+    mode: learning
+    learn_threshold: 50
+    block_threshold: 80
+    learn_escalate_count: 5
+    learn_escalate_window_minutes: 10
+    ban_duration_minutes: 60
+    whitelist_ips:
+      - "127.0.0.1"
+      - "::1"
+  notifications:
+    webui: true
+    discord: false
+    discord_webhook: ""
+    email:
+      enabled: false

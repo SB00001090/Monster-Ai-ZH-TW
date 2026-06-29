@@ -1,0 +1,19 @@
+{
+  "id": "20260625_222622_07fc9af6",
+  "label": "good",
+  "timestamp": "2026-06-25T22:26:22.429391+00:00",
+  "prompt": "Ado as nun, torn black nun habit, cross necklace, bound to altar, legs spread, holy light mixed with dark shadows, detailed pussy and breasts, orgasm expression, church interior with candles, dramatic rim lighting",
+  "negative": "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry, out of focus, censorship, black bars, deformed iris, deformed pupils, deformed face, deformed eyes, bad eyes, bad teeth, bad tongue, deformed body, extra limbs, extra arms, extra legs, fused fingers, too many fingers, long neck, bad proportions, gross proportions, poorly drawn face, poorly drawn hands, mutation, deformed, ugly, disfigured, morbid, mutilated, malformed, extra fingers, mutated hands, poorly drawn hands, mutation, deformed, blurry, bad anatomy, bad proportions, extra limbs, cloned face, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck, username, watermark, text, error, cropped, worst quality, low quality, jpeg artifacts, blurry, deformed, bad anatomy, disfigured, mutation, extra limbs, ugly, poorly drawn hands, missing fingers, extra digit, fewer digits, malformed hands, long neck, bad proportions, childlike, loli, underage, old woman, fat, obese, muscular female, veiny breasts, veiny body, horror, scary, dark, overexposed, underexposed, monochrome, duplicate",
+  "checkpoint": "cyberrealistic_final.safetensors",
+  "attempt": 0,
+  "quality": {
+    "passed": true,
+    "score": 1.0,
+    "issues": [],
+    "reasons": [],
+    "clip_score": null,
+    "aesthetic_score": null,
+    "rule_score": 1.0
+  },
+  "lora": "anti_collapse.safetensors"
+}

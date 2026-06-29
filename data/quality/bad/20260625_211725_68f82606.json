@@ -1,0 +1,25 @@
+{
+  "id": "20260625_211725_68f82606",
+  "label": "bad",
+  "timestamp": "2026-06-25T21:17:25.036552+00:00",
+  "prompt": "photorealistic masterpiece, high definition, sharp focus, natural cinematic lighting, real-life Japanese singer Ado exactly as she appears in her 2026 Vivarium music video partial face reveal, accurat",
+  "negative": "deformed, distorted, disfigured, bad anatomy, extra limbs, missing limbs, fused fingers, text, watermark, blurry, low quality, oversaturated, monochrome noise, jpeg artifacts, black image, white image, ugly, duplicate",
+  "checkpoint": "auto",
+  "attempt": 0,
+  "quality": {
+    "passed": false,
+    "score": 0.6,
+    "issues": [
+      "noise_wall"
+    ],
+    "reasons": [
+      "High-frequency noise wall detected"
+    ],
+    "clip_score": null,
+    "aesthetic_score": null,
+    "rule_score": 0.6
+  },
+  "source": "C:\\MonsterAI\\comfyui\\ComfyUI_windows_portable_nvidia\\ComfyUI_windows_portable\\ComfyUI\\output\\monster_ai_00002_.png",
+  "imported": true,
+  "origin": "comfyui_output"
+}

@@ -1,0 +1,23 @@
+# MonsterGuard standalone — lightweight anti-scam bot (optional Ollama for chat/AI)
+services:
+  monsterguard:
+    build: .
+    restart: unless-stopped
+    environment:
+      MONSTER_DISCORD_TOKEN: ${MONSTER_DISCORD_TOKEN}
+      GUARD_MODE: standalone
+      GUARD_AI_BACKEND: ${GUARD_AI_BACKEND:-ollama}
+      MONSTER_OLLAMA_URL: http://ollama:11434
+      MONSTER_LLM_MODEL: llama3.2:latest
+    command: python -m monster_ai.modules.discord.standalone
+    depends_on:
+      - ollama
+
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    volumes:
+      - ollama_guard_data:/root/.ollama
+
+volumes:
+  ollama_guard_data:

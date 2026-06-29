@@ -1,0 +1,65 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node / Web UI
+node_modules/
+.pnpm-store/
+*.tsbuildinfo
+dist/
+.cache
+.parcel-cache
+coverage/
+.nyc_output
+.webdev/
+
+# IDE / tooling
+.idea/
+.vscode/
+*.swp
+mcps/
+.gradle/
+**/build/
+*.jks
+keystore.properties
+
+# Cursor / IDE session artifacts (local only)
+Discord版 Monster Ai/
+terminals/
+
+# Discord secrets (local only)
+discord.token.local
+
+# Local config (use config.example.yaml as template)
+config.yaml
+
+# Monster AI runtime data
+.monster-data/
+data/chats/
+data/logs/
+data/models/
+data/guard/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.token

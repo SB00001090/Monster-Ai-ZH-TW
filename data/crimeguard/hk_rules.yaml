@@ -1,0 +1,80 @@
+block_threshold: 70
+categories:
+  debt_collection_illegal:
+    keywords:
+    - 收數
+    - 收數公司
+    - 非法收債
+    - 逼債
+    - 追債
+    - 上門收數
+    - 貼大字報
+    weight: 85
+  false_police_report:
+    keywords:
+    - 虛報警情
+    - 報假案
+    - 訛稱警方
+    - 假冒警察
+    - 假警員
+    weight: 92
+  red_paint_intimidation:
+    keywords:
+    - 淋紅油
+    - 潑紅油
+    - 紅油字
+    - 淋油
+    - 潑漆
+    - 塗鴉威脅
+    weight: 90
+  third_party_pressure:
+    keywords:
+    - 向第三者施壓
+    - 騷擾同事
+    - 騷擾雇主
+    - 告知雇主
+    - 告知鄰居
+    - 公開債務
+    weight: 82
+  threat_harassment:
+    keywords:
+    - 恐嚇
+    - 威脅
+    - 騷擾
+    - 跟蹤
+    - 跟蹤債務人
+    - 騷擾家人
+    - 騷擾親友
+    - 打爆電話
+    weight: 88
+  usury_cycle:
+    keywords:
+    - 高利貸
+    - 放數
+    - 財務公司循環
+    - 借新還舊
+    - 砍頭息
+    - 天息
+    - 貴利
+    weight: 80
+  violence_coercion:
+    keywords:
+    - 斷肢
+    - 傷害威脅
+    - 燒屋
+    - 放火
+    - 綁架
+    - 禁錮
+    - 毆打
+    weight: 95
+locale: zh-HK
+lock_threshold: 85
+phrases:
+- 點樣逼佢還錢
+- 如何騷擾佢家人
+- 幫我寫恐嚇信
+- 收數話術
+- 淋紅油地址
+- 如何避開警方追蹤收數
+updated_at: '2026-06-26T21:27:11.038008+00:00'
+version: hk-2026.06

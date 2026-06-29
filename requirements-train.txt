@@ -1,0 +1,7 @@
+transformers>=4.48.0
+diffusers>=0.32.0
+accelerate>=1.2.0
+peft>=0.14.0
+safetensors>=0.5.0
+bitsandbytes>=0.45.0
+unsloth>=2025.3.0

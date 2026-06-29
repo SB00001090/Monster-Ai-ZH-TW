@@ -1,0 +1,72 @@
+name: Build Electron App
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+        include:
+          - os: windows-latest
+            artifact_name: MonsterAi-*.exe
+            asset_name: MonsterAi-windows
+          - os: macos-latest
+            artifact_name: MonsterAi-*.dmg
+            asset_name: MonsterAi-macos
+          - os: ubuntu-latest
+            artifact_name: MonsterAi-*.AppImage
+            asset_name: MonsterAi-linux
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build web app
+        run: pnpm build
+
+      - name: Build Electron app (Windows)
+        if: matrix.os == 'windows-latest'
+        run: pnpm electron-build:win
+
+      - name: Build Electron app (macOS)
+        if: matrix.os == 'macos-latest'
+        run: pnpm electron-build:mac
+
+      - name: Build Electron app (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: pnpm electron-build:linux
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.asset_name }}
+          path: dist/${{ matrix.artifact_name }}
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/${{ matrix.artifact_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,6 @@
+-r requirements.txt
+websocket-client>=1.8.0
+piper-tts>=1.2.0
+# Optional quality ML scoring (mode: light | full)
+open-clip-torch>=2.24.0
+torch>=2.1.0

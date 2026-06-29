@@ -1,0 +1,49 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: monster-ollama
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  comfyui:
+    build:
+      context: ./docker/comfyui
+    container_name: monster-comfyui
+    ports:
+      - "8188:8188"
+    volumes:
+      - ./data/comfyui/models:/comfyui/models
+      - ./data/outputs:/comfyui/output
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  monster-ai:
+    build: .
+    container_name: monster-ai
+    ports:
+      - "7860:7860"
+    volumes:
+      - ./data:/app/data
+    environment:
+      MONSTER_CONFIG: /app/config.docker.yaml
+      MONSTER_OLLAMA_URL: http://ollama:11434
+    depends_on:
+      - ollama
+      - comfyui
+
+volumes:
+  ollama_data:

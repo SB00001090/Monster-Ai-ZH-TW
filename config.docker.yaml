@@ -1,0 +1,69 @@
+host: "0.0.0.0"
+port: 7860
+log_level: "info"
+
+repair:
+  interval_seconds: 30
+  max_retries: 2
+  generation_max_retries: 2
+  mode: full_auto
+  code_repair_enabled: false
+  watchdog:
+    enabled: true
+    restart_comfyui: false
+
+persona:
+  enabled: true
+  default_mode: grok
+
+llm:
+  ollama_url: "http://ollama:11434"
+  model: "llama3.2:latest"
+  num_ctx: 4096
+  temperature: 0.8
+  timeout_seconds: 120
+
+launcher:
+  auto_start_comfyui: false
+  wait_for_comfyui: false
+
+history:
+  enabled: true
+  dir: "./data/logs/generation_history"
+  retention_days: 30
+  auto_purge_on_startup: true
+
+modules:
+  chat:
+    enabled: true
+  roleplay:
+    enabled: true
+  image:
+    enabled: true
+    comfyui_url: "http://comfyui:8188"
+    checkpoint: auto
+    quality:
+      enabled: true
+      mode: rules
+  video:
+    enabled: true
+    comfyui_url: "http://comfyui:8188"
+    require_ffmpeg: true
+    temp_dir: "./data/tmp"
+  tts:
+    enabled: true
+    engine: piper
+  prompt:
+    enabled: true
+  training:
+    enabled: false
+
+protection:
+  rate_limit_per_minute: 120
+  allowed_data_roots:
+    - "./data"
+  firewall:
+    enabled: true
+    mode: learning
+  notifications:
+    webui: true

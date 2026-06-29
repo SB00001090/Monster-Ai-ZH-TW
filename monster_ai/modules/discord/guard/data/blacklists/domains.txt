@@ -1,0 +1,23 @@
+# MonsterGuard seed blacklist — Discord scam domains
+# Lines starting with # are comments
+
+discrod-gift.com
+discord-nitro.gift
+discordgift.site
+discord-app.gift
+discordnitro.free
+steamcommunlty.com
+steamcommunty.ru
+discord-verify.com
+discord-auth.net
+discordcaptcha.com
+discord-app.info
+discord-giveaway.xyz
+discordmoderator.com
+discord-staff.app
+mrbeast-giveaway.com
+crypto-airdrop.xyz
+wallet-connect.live
+discord.com.ru
+dlscord.gift
+discordnitro.claim

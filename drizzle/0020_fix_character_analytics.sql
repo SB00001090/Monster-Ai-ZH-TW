@@ -1,0 +1,1 @@
+ALTER TABLE `characterAnalytics` ADD `conversationCount` int NOT NULL DEFAULT 0;

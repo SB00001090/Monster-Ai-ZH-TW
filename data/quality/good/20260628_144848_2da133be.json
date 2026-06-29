@@ -1,0 +1,19 @@
+{
+  "id": "20260628_144848_2da133be",
+  "label": "good",
+  "timestamp": "2026-06-28T14:48:48.288374+00:00",
+  "prompt": "Portrait of Wise Mentor. An ancient sage who guides travelers with patience and wisdom.. Setting: Knowledge is the greatest gift one can share.. Digital art, character design, high quality illustration, portrait, character design, variation 1",
+  "negative": "deformed, distorted, disfigured, bad anatomy, extra limbs, missing limbs, fused fingers, text, watermark, blurry, low quality, oversaturated, monochrome noise, jpeg artifacts, black image, white image, ugly, duplicate",
+  "checkpoint": "Counterfeit-V3.0_fp16.safetensors",
+  "attempt": 0,
+  "quality": {
+    "passed": true,
+    "score": 1.0,
+    "issues": [],
+    "reasons": [],
+    "clip_score": null,
+    "aesthetic_score": null,
+    "rule_score": 1.0
+  },
+  "lora": null
+}

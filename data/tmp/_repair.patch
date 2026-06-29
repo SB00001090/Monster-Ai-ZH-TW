@@ -1,0 +1,11 @@
+--- a monster_ai/protection/tier_orchestrator.py
++++ b monster_ai/protection/tier_orchestrator.py
+@@ -18,7 +18,7 @@
+     for tier in tiers:
+         print(f"Protection tier {tier} applied: {tiers[tier]}")
+ 
+-        if "monsterlock" in tiers[tier]:
++        if tier == 'monsterlock' or 'monsterlock' in tiers[tier]:
+             print("Protection tier mid_vram applied: ['monsterlock']")
+ 
+     # ... (rest of the code remains the same)

@@ -1,0 +1,9 @@
+{
+  "version": "callguard-hk-2026.06",
+  "locale": "zh-HK",
+  "prefixes_high_risk": ["+8529", "+8524", "+861", "+886", "+234", "+91"],
+  "keywords_display": ["收數", "財務公司", "追債", "還款", "逾期", "律師行", "法院", "警察", "投資", "中獎"],
+  "known_scam_numbers": [],
+  "reject_threshold": 85,
+  "block_threshold": 70
+}

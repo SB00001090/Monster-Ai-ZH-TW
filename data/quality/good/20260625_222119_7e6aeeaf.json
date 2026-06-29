@@ -1,0 +1,19 @@
+{
+  "id": "20260625_222119_7e6aeeaf",
+  "label": "good",
+  "timestamp": "2026-06-25T22:21:19.040952+00:00",
+  "prompt": "masterpiece, best quality, ultra-detailed, 8k, raw photo, \na beautiful Japanese female singer named Ado, 20 years old, exact face, sharp facial features, long black hair with blue highlights, large expressive eyes, pale skin, \nwearing [outfit], [pose], [expression], \ndetailed background: [scene], dramatic lighting, volumetric fog, depth of field, \ncinematic composition, sharp focus, intricate details\nNegative: lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry",
+  "negative": "deformed, distorted, disfigured, bad anatomy, extra limbs, missing limbs, fused fingers, text, watermark, blurry, low quality, oversaturated, monochrome noise, jpeg artifacts, black image, white image, ugly, duplicate",
+  "checkpoint": "cyberrealistic_final.safetensors",
+  "attempt": 0,
+  "quality": {
+    "passed": true,
+    "score": 1.0,
+    "issues": [],
+    "reasons": [],
+    "clip_score": null,
+    "aesthetic_score": null,
+    "rule_score": 1.0
+  },
+  "lora": "anti_collapse.safetensors"
+}

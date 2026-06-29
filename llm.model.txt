@@ -1,0 +1,42 @@
+host: "127.0.0.1"
+port: 7860
+log_level: "info"
+
+repair:
+  interval_seconds: 30
+  max_retries: 2
+
+llm:
+  ollama_url: "http://127.0.0.1:11434"
+  model: "llama3.2:latest"
+  num_ctx: 4096
+  temperature: 0.8
+  timeout_seconds: 120
+
+profiles:
+  rtx_4060:
+    model: "llama3.2:latest"
+    num_ctx: 4096
+  rtx_4090:
+    model: "llama3.1:8b"
+    num_ctx: 8192
+
+modules:
+  chat:
+    enabled: true
+  image:
+    enabled: false
+    comfyui_url: "http://127.0.0.1:8188"
+  discord:
+    enabled: false
+    token_env: "MONSTER_DISCORD_TOKEN"
+  tts:
+    enabled: false
+    engine: "pyttsx3"
+  training:
+    enabled: false
+
+protection:
+  rate_limit_per_minute: 60
+  allowed_data_roots:
+    - "./data"

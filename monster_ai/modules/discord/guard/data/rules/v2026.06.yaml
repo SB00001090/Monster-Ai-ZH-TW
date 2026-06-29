@@ -1,0 +1,14 @@
+version: "2026.06"
+keyword_rules:
+  - pattern: "discrod\\s*nitro|discordapp\\.com/gifts"
+    score: 50
+    type: nitro
+  - pattern: "telegram\\s*giveaway|t\\.me/.*nitro"
+    score: 35
+    type: nitro
+  - pattern: "moderator\\s*form|staff\\s*application.*http"
+    score: 40
+    type: verification
+  - pattern: "usdt\\s*giveaway|binance\\s*reward"
+    score: 45
+    type: crypto

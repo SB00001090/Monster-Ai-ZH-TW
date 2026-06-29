@@ -1,0 +1,1 @@
+ALTER TABLE `modelImprovements` MODIFY COLUMN `improvementType` enum('prompt_optimization','response_quality','context_awareness','tone_adjustment','accuracy_improvement','self_reflection') NOT NULL;

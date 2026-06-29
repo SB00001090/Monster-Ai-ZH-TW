@@ -1,0 +1,19 @@
+{
+  "id": "20260628_140904_16d9d0f7",
+  "label": "good",
+  "timestamp": "2026-06-28T14:09:04.803247+00:00",
+  "prompt": "portrait of Wise Mentor, An ancient sage who guides travelers with patience and wisdom., An ancient sage who guides travelers with patience and wisdom., Wise Mentor. An ancient sage who guides travelers with patience and wisdom.. Knowledge is the greatest gift one can share., character design, single person, upper body, detailed face, studio lighting, plain background, masterpiece, best quality",
+  "negative": "deformed, distorted, disfigured, bad anatomy, extra limbs, missing limbs, fused fingers, text, watermark, blurry, low quality, oversaturated, monochrome noise, jpeg artifacts, black image, white image, ugly, duplicate",
+  "checkpoint": "Counterfeit-V3.0_fp16.safetensors",
+  "attempt": 0,
+  "quality": {
+    "passed": true,
+    "score": 1.0,
+    "issues": [],
+    "reasons": [],
+    "clip_score": null,
+    "aesthetic_score": null,
+    "rule_score": 1.0
+  },
+  "lora": null
+}

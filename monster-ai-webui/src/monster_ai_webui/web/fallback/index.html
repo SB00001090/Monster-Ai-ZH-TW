@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monster AI</title>
+  <link rel="stylesheet" href="/style.css?v=4">
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>Monster AI</h1>
+      <p class="subtitle">Local-first · Self-healing · Open source</p>
+      <div class="header-status-row">
+        <div id="status" class="status">Connecting…</div>
+        <div id="monsterlock-badge" class="monsterlock-badge" title="MonsterLock">
+          <span id="monsterlock-dot" class="monsterlock-dot off"></span>
+          <span id="monsterlock-label">MonsterLock</span>
+        </div>
+        <div id="crimeguard-badge" class="crimeguard-badge" title="CrimeGuard">
+          <span id="crimeguard-dot" class="crimeguard-dot off"></span>
+          <span id="crimeguard-label">CrimeGuard</span>
+        </div>
+        <div id="callguard-badge" class="callguard-badge" title="MonsterCallGuard">
+          <span id="callguard-dot" class="callguard-dot off"></span>
+          <span id="callguard-label">CallGuard</span>
+        </div>
+        <span id="hardware-tier" class="hardware-tier" title="硬體 Tier">tier: …</span>
+      </div>
+      <details id="monsterlock-panel" class="monsterlock-panel">
+        <summary>MonsterLock 防護事件</summary>
+        <ul id="monsterlock-events" class="monsterlock-events"></ul>
+      </details>
+      <details id="crimeguard-panel" class="crimeguard-panel">
+        <summary>CrimeGuard 犯罪防範事件（香港）</summary>
+        <ul id="crimeguard-events" class="crimeguard-events"></ul>
+      </details>
+      <details id="callguard-panel" class="callguard-panel">
+        <summary>MonsterCallGuard 反詐騙來電</summary>
+        <ul id="callguard-events" class="callguard-events"></ul>
+      </details>
+    </header>
+
+    <nav class="tabs">
+      <button type="button" class="tab active" data-tab="chat">Chat</button>
+      <button type="button" class="tab" data-tab="roleplay">Roleplay</button>
+      <button type="button" class="tab" data-tab="generate">Generate</button>
+    </nav>
+
+    <section id="panel-chat" class="panel active">
+      <details id="persona-panel" class="persona-panel">
+        <summary>Persona / system prompt</summary>
+        <label class="gen-label">Mode
+          <select id="persona-mode">
+            <option value="grok">Grok (uncensored)</option>
+            <option value="custom">Custom prompt</option>
+            <option value="off">Off</option>
+          </select>
+        </label>
+        <textarea id="persona" rows="3" placeholder="Custom system prompt (Custom mode)…"></textarea>
+      </details>
+      <div id="security-toasts" class="security-toasts" aria-live="polite"></div>
+      <main id="chat" class="chat" aria-live="polite"></main>
+      <form id="form" class="input-row">
+        <textarea id="message" rows="2" placeholder="Type a message…" required></textarea>
+        <button type="submit">Send</button>
+      </form>
+    </section>
+
+    <section id="panel-roleplay" class="panel">
+      <div class="roleplay-bar">
+        <select id="character-select"><option value="">— Character —</option></select>
+        <select id="session-select"><option value="">— Session —</option></select>
+        <button type="button" id="new-session">New session</button>
+        <label class="upload-btn">
+          Import card
+          <input type="file" id="card-upload" accept=".json,.png" hidden>
+        </label>
+      </div>
+      <details class="portrait-panel">
+        <summary>Generate character portrait</summary>
+        <textarea id="portrait-desc" rows="2" placeholder="Character appearance (optional)…"></textarea>
+        <button type="button" id="btn-portrait">Generate portrait</button>
+        <button type="button" id="btn-set-avatar" disabled>Set as avatar</button>
+        <div id="portrait-result" class="gen-result"></div>
+      </details>
+      <main id="roleplay-chat" class="chat" aria-live="polite"></main>
+      <form id="roleplay-form" class="input-row">
+        <textarea id="roleplay-message" rows="2" placeholder="In-character message…" required></textarea>
+        <button type="submit">Send</button>
+      </form>
+    </section>
+
+    <section id="panel-generate" class="panel panel-generate">
+      <div class="gen-layout">
+      <div class="gen-grid gen-grid-top">
+        <div class="gen-card">
+          <h3>Image</h3>
+          <p id="ckpt-status" class="gen-hint">Checkpoint: loading…</p>
+          <label class="gen-label">Model / Style
+            <select id="img-model"><option value="auto">載入中…</option></select>
+          </label>
+          <label class="gen-label">Prompt
+            <textarea id="img-prompt" rows="3" placeholder="Describe an image…"></textarea>
+          </label>
+          <label class="gen-label">Negative prompt <span class="gen-hint-inline">（固定，每次生成都會使用）</span>
+            <textarea id="img-negative" rows="2" placeholder="What to avoid…"></textarea>
+          </label>
+          <label class="gen-label">LoRA (optional)
+            <select id="img-lora"><option value="">— None —</option></select>
+          </label>
+          <label class="gen-label">LoRA strength
+            <input type="range" id="img-lora-strength" min="0.1" max="1.5" step="0.05" value="0.8">
+            <span id="img-lora-strength-val">0.8</span>
+          </label>
+          <label class="gen-label gen-check">
+            <input type="checkbox" id="img-quality-filter" checked>
+            Quality filter (auto-retry bad images)
+          </label>
+          <label class="gen-label">Max quality retries
+            <input type="number" id="img-quality-retries" min="0" max="5" value="3" style="width:4rem">
+          </label>
+          <button type="button" id="btn-image">Generate image</button>
+          <div id="img-status" class="gen-status"></div>
+          <div id="img-result" class="gen-result"></div>
+        </div>
+        <div class="gen-card">
+          <h3>Voice (Piper)</h3>
+          <textarea id="tts-text" rows="3" placeholder="Text to speak…"></textarea>
+          <button type="button" id="btn-tts">Synthesize</button>
+          <div id="tts-status" class="gen-status"></div>
+          <div id="tts-result" class="gen-result"></div>
+        </div>
+      </div>
+      <div class="gen-card gen-video-wide">
+        <h3>Video (.mp4)</h3>
+        <p class="gen-hint">ComfyUI 渲染 → ffmpeg 合成。RTX 4060 約 30 秒～3 分鐘，請看下方進度列。</p>
+        <textarea id="vid-prompt" rows="2" placeholder="Describe motion/scene…"></textarea>
+        <div class="vid-controls">
+          <label class="gen-label">Frames <input type="number" id="vid-frames" min="4" max="32" value="8"></label>
+          <label class="gen-label">W <input type="number" id="vid-width" min="256" max="1024" value="512"></label>
+          <label class="gen-label">H <input type="number" id="vid-height" min="256" max="1024" value="512"></label>
+          <label class="gen-label">FPS <input type="number" id="vid-fps" min="4" max="30" value="8"></label>
+          <button type="button" id="btn-video">Generate video</button>
+        </div>
+        <div id="vid-status" class="gen-status" aria-live="polite"></div>
+        <div id="vid-preview" class="video-preview-box" data-ratio="1">
+          <p class="video-preview-placeholder">預覽區 — 完成後影片會顯示在這裡</p>
+          <div id="vid-player" class="video-player-slot"></div>
+        </div>
+        <div id="vid-actions" class="video-preview-actions" hidden></div>
+        <div id="vid-meta" class="video-meta"></div>
+      </div>
+      </div>
+      <details class="history-panel">
+        <summary>Generation history</summary>
+        <div class="history-bar">
+          <input type="text" id="history-q" placeholder="Search prompt…">
+          <select id="history-type">
+            <option value="">All types</option>
+            <option value="image">Image</option>
+            <option value="video">Video</option>
+            <option value="portrait">Portrait</option>
+            <option value="tts">TTS</option>
+          </select>
+          <button type="button" id="btn-history-load">Load</button>
+        </div>
+        <ul id="history-list" class="history-list"></ul>
+      </details>
+    </section>
+  </div>
+  <script src="/app.js?v=4"></script>
+  <script src="/roleplay.js?v=4"></script>
+  <script src="/generate.js?v=5"></script>
+</body>
+</html>

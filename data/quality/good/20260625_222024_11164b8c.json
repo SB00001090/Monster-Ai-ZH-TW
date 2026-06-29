@@ -1,0 +1,19 @@
+{
+  "id": "20260625_222024_11164b8c",
+  "label": "good",
+  "timestamp": "2026-06-25T22:20:24.111003+00:00",
+  "prompt": "masterpiece, best quality, absurdres, extremely detailed CG unity 8k wallpaper, \nAdo as AV actress, perfect face 100% likeness, seductive ahegao expression, tongue out, rolling eyes, \nnude body, detailed skin texture, sweat droplets, glistening skin, large breasts, slim waist, wide hips, \n[pose: lying on bed with legs spread / bound in shibari ropes / doggy style / missionary], \ndetailed pussy, vaginal juices, penetration, \ndark bedroom with blue rose petals, neon lighting, blue and purple tones, \nvolumetric lighting, cinematic angle, depth of field\nNegative: bad anatomy, deformed, extra limbs, low quality, blurry, censored, bar, mosaic",
+  "negative": "deformed, distorted, disfigured, bad anatomy, extra limbs, missing limbs, fused fingers, text, watermark, blurry, low quality, oversaturated, monochrome noise, jpeg artifacts, black image, white image, ugly, duplicate",
+  "checkpoint": "cyberrealistic_final.safetensors",
+  "attempt": 0,
+  "quality": {
+    "passed": true,
+    "score": 1.0,
+    "issues": [],
+    "reasons": [],
+    "clip_score": null,
+    "aesthetic_score": null,
+    "rule_score": 1.0
+  },
+  "lora": "anti_collapse.safetensors"
+}

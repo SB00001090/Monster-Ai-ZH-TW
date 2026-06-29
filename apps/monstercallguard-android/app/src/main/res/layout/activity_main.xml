@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="20dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/logo"
+            android:layout_width="match_parent"
+            android:layout_height="72dp"
+            android:adjustViewBounds="true"
+            android:contentDescription="MonsterCallGuard Logo"
+            android:scaleType="fitStart"
+            android:src="@drawable/logo_monstercallguard" />
+
+        <TextView
+            android:id="@+id/status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="純 APK 側載 · 無廣告 · 無 Google Play"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/stats"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="今日拒接: 0"
+            android:textSize="14sp" />
+
+        <EditText
+            android:id="@+id/lanHost"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:hint="家中 Monster AI LAN IP (例 192.168.1.16，不是手機 IP)" />
+
+        <EditText
+            android:id="@+id/tailscaleHost"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="Tailscale (例 tm0721.taile4ca68.ts.net)" />
+
+        <EditText
+            android:id="@+id/homeUrl"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="完整 URL 覆寫 (可選)" />
+
+        <Button
+            android:id="@+id/autoDiscover"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="自動偵測家中 Monster AI IP" />
+
+        <Button
+            android:id="@+id/saveHosts"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="儲存連線設定" />
+
+        <Button
+            android:id="@+id/testConnection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="測試家中 Monster AI 連線" />
+
+        <Button
+            android:id="@+id/enableScreening"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="啟用來電篩選（必須）" />
+
+        <Button
+            android:id="@+id/startProtection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="啟動背景保護服務" />
+
+        <Button
+            android:id="@+id/batteryOpt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="關閉電池最佳化（防被系統殺掉）" />
+
+        <Button
+            android:id="@+id/unlockNetwork"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="解除網絡鎖定" />
+
+        <Button
+            android:id="@+id/callHotline"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="撥打 ADCC 反詐騙熱線 18222" />
+    </LinearLayout>
+</ScrollView>

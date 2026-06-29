@@ -1,0 +1,19 @@
+{
+  "id": "20260625_221652_3ff781f2",
+  "label": "good",
+  "timestamp": "2026-06-25T22:16:52.146326+00:00",
+  "prompt": "masterpiece, best quality, ultra detailed, anime style digital painting, 1girl, exact same face and appearance as reference image, 100% identical pale white skin, beautiful Japanese singer Ado face, large expressive bright blue eyes with long lashes and smudged black eyeliner + tears, wide open screaming/moaning mouth showing sharp white teeth and bright red tongue inside mouth, long straight black hair with blue highlights and blue inner streaks, straight bangs covering forehead, hair flowing down to waist, long sharp blue painted fingernails, intense ecstatic ahegao expression adapted from original, slim athletic body with perfect curves, detailed anatomy",
+  "negative": "deformed, distorted, disfigured, bad anatomy, extra limbs, missing limbs, fused fingers, text, watermark, blurry, low quality, oversaturated, monochrome noise, jpeg artifacts, black image, white image, ugly, duplicate",
+  "checkpoint": "cyberrealistic_final.safetensors",
+  "attempt": 0,
+  "quality": {
+    "passed": true,
+    "score": 1.0,
+    "issues": [],
+    "reasons": [],
+    "clip_score": null,
+    "aesthetic_score": null,
+    "rule_score": 1.0
+  },
+  "lora": "anti_collapse.safetensors"
+}

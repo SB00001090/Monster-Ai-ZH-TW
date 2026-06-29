@@ -1,0 +1,21 @@
+{
+  "id": "20260625_211724_13809fdb",
+  "label": "good",
+  "timestamp": "2026-06-25T21:17:24.457338+00:00",
+  "prompt": "photorealistic Japanese singer Ado from the Vivarium music video, high-quality street performance pose, natural cinematic lighting, accurate real-life facial features and delicate Japanese facial structure, sharp focus, vibrant Lee Tung Street in Wan Chai Hong Kong, colorful street art murals on traditional shophouse walls.",
+  "negative": "deformed, distorted, disfigured, bad anatomy, extra limbs, missing limbs, fused fingers, text, watermark, blurry, low quality, oversaturated, monochrome noise, jpeg artifacts, black image, white image, ugly, duplicate",
+  "checkpoint": "auto",
+  "attempt": 0,
+  "quality": {
+    "passed": true,
+    "score": 1.0,
+    "issues": [],
+    "reasons": [],
+    "clip_score": null,
+    "aesthetic_score": null,
+    "rule_score": 1.0
+  },
+  "source": "C:\\MonsterAI\\monster-ai\\data\\outputs\\images\\c851873da7a5427c889935f2e200f7f4.png",
+  "imported": true,
+  "origin": "monster_ai"
+}

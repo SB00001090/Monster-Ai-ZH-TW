@@ -1,0 +1,5 @@
+enabled: true
+grok:
+  humor: high
+  directness: high
+  uncensored: true

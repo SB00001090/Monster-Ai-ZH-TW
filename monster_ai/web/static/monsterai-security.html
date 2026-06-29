@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-HK" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MonsterAi — 安全中心</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            cyber: { bg: '#0a0a0f', card: '#16161f', border: '#2a2f3d' }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    .dot-ok { background:#22c55e; box-shadow:0 0 8px rgba(34,197,94,.6); }
+    .dot-warn { background:#f59e0b; box-shadow:0 0 8px rgba(245,158,11,.6); }
+    .dot-lock { background:#ef4444; box-shadow:0 0 8px rgba(239,68,68,.6); }
+    @media (prefers-reduced-motion: reduce) { .dot-ok,.dot-warn,.dot-lock { box-shadow:none; } }
+  </style>
+</head>
+<body class="bg-cyber-bg text-white min-h-screen flex flex-col md:flex-row">
+  <!-- 左側欄 -->
+  <aside class="w-full md:w-72 border-r border-cyber-border bg-[#0a0a0f] flex flex-col shrink-0 max-h-screen">
+    <div class="p-3">
+      <button onclick="showView('welcome')" class="w-full rounded-xl bg-blue-600 hover:bg-blue-500 px-4 py-2.5 font-semibold text-sm">+ 新聊天</button>
+    </div>
+    <div class="px-3 pb-2">
+      <button onclick="showView('security')" class="w-full flex items-center gap-2 px-3 py-2 rounded-xl border border-violet-500/30 bg-gradient-to-r from-violet-500/10 to-blue-500/10 text-left text-sm">
+        <span>🛡</span> 安全中心 <span id="sidebar-dot" class="w-2 h-2 rounded-full dot-ok ml-auto"></span>
+      </button>
+      <div id="sidebar-rows" class="mt-2 space-y-1 text-xs text-gray-400"></div>
+    </div>
+    <div class="px-4 py-2 text-sm text-gray-500 font-medium">角色</div>
+    <div class="flex-1 overflow-y-auto px-2 text-sm text-gray-400">
+      <div class="px-3 py-2 rounded-lg">Test Conversation</div>
+      <div class="px-3 py-2 rounded-lg">Image Test</div>
+    </div>
+    <div class="p-3 border-t border-cyber-border">
+      <a id="apk-link-side" href="/downloads/MonsterCallGuard-v1.0.8-signed.apk" class="flex items-center gap-2 text-sm text-blue-400 hover:underline">
+        📱 CallGuard <span id="apk-ver-side">v1.0.8</span>
+      </a>
+    </div>
+    <div class="p-3 border-t border-cyber-border">
+      <div class="flex gap-2 rounded-xl bg-white/5 border border-white/10 px-3 py-2">
+        <input type="text" placeholder="問 MonsterAI..." class="flex-1 bg-transparent text-sm outline-none" />
+        <button class="text-blue-400">➤</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 主區 -->
+  <main class="flex-1 flex flex-col min-h-0">
+    <header class="h-14 border-b border-cyber-border flex items-center justify-between px-4 bg-[#111118]/90">
+      <button onclick="showView('welcome')" class="flex items-center gap-2 rounded-full bg-white text-black px-4 py-2 font-semibold text-sm">
+        <span class="text-lg">👹</span> MonsterAi
+      </button>
+      <div class="flex items-center gap-2 text-sm">
+        <button onclick="showView('welcome')" class="rounded-full bg-blue-600 px-3 py-1.5">消息</button>
+        <button onclick="showView('security')" class="rounded-full border border-white/20 px-3 py-1.5 relative">
+          🛡 安全中心
+          <span id="nav-dot" class="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full dot-ok"></span>
+        </button>
+        <span class="text-gray-400 px-2">ZH</span>
+      </div>
+    </header>
+
+    <!-- 歡迎畫面 -->
+    <section id="view-welcome" class="flex-1 overflow-y-auto flex flex-col items-center justify-center p-8">
+      <div class="text-6xl mb-4 neon-glow">👹</div>
+      <h1 class="text-4xl font-bold mb-2">歡迎來到 MonsterAi</h1>
+      <p class="text-gray-400 mb-10">透過我們的互動教程開始使用</p>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-3xl mb-8">
+        <div class="p-6 rounded-xl bg-cyber-card border border-white/10 hover:border-blue-500/40 cursor-pointer">📖 學習基礎知識</div>
+        <div class="p-6 rounded-xl bg-cyber-card border border-white/10 hover:border-blue-500/40 cursor-pointer">💬 開始聊天</div>
+        <div class="p-6 rounded-xl bg-cyber-card border border-white/10 hover:border-blue-500/40 cursor-pointer">✨ 創建角色</div>
+      </div>
+      <button class="rounded-full bg-blue-600 px-8 py-3 font-semibold mb-10">Start Chatting Now</button>
+      <div id="apk-welcome" class="w-full max-w-3xl p-5 rounded-xl bg-cyber-card border border-violet-500/20"></div>
+    </section>
+
+    <!-- 安全中心 -->
+    <section id="view-security" class="hidden flex-1 overflow-y-auto p-6 space-y-6">
+      <h1 class="text-2xl font-bold flex items-center gap-2">🛡 安全中心</h1>
+      <div id="threat-stats" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
+      <div id="status-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      <div class="flex flex-wrap gap-3">
+        <button onclick="triggerLock()" id="btn-lock" class="rounded-full bg-red-600 hover:bg-red-500 px-5 py-2.5 font-semibold text-sm">🔒 立即網絡鎖定</button>
+        <input id="recover-token" type="text" placeholder="Recovery token" class="rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm flex-1 min-w-[160px]" />
+        <button onclick="recoverLock()" class="rounded-xl border border-white/20 px-4 py-2 text-sm">解除鎖定</button>
+      </div>
+      <div class="p-4 rounded-xl bg-cyber-card border border-white/10">
+        <h3 class="font-semibold mb-3 text-sm">最近匿名舉報</h3>
+        <div id="reports-table" class="text-xs overflow-x-auto"></div>
+      </div>
+      <div id="apk-security" class="p-5 rounded-xl bg-cyber-card border border-violet-500/20"></div>
+    </section>
+  </main>
+
+  <script>
+    let snapshot = null;
+    let manifest = null;
+
+    function showView(name) {
+      document.getElementById('view-welcome').classList.toggle('hidden', name !== 'welcome');
+      document.getElementById('view-welcome').classList.toggle('flex', name === 'welcome');
+      document.getElementById('view-security').classList.toggle('hidden', name !== 'security');
+    }
+
+    function dotClass(cg) {
+      if (cg?.network_locked) return 'dot-lock';
+      if (cg?.device_contact_detected || cg?.vpn_detected) return 'dot-warn';
+      return 'dot-ok';
+    }
+
+    function renderApkBlock(el, m) {
+      if (!el || !m) return;
+      const url = m.apk_url || '/downloads/MonsterCallGuard-v1.0.8-signed.apk';
+      const full = location.origin + url;
+      const qr = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' + encodeURIComponent(full);
+      const sha = (m.apk_sha256 || '').slice(0, 16);
+      el.innerHTML = `
+        <div class="flex flex-col sm:flex-row gap-4">
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold">📱 MonsterCallGuard v${m.app_version || '1.0.8'}</h3>
+            <p class="text-sm text-gray-400 mt-1">香港來電反制 · 收數拒接 · 設備聯繫網絡鎖定</p>
+            <p class="text-xs text-gray-500 mt-2 font-mono">SHA256: ${sha}…</p>
+            <p class="text-xs text-gray-500 mt-1">${m.changelog || ''}</p>
+            <a href="${url}" class="inline-block mt-3 rounded-full bg-blue-600 px-5 py-2 text-sm font-semibold">下載 APK</a>
+            <details class="mt-3 text-xs text-gray-400"><summary class="cursor-pointer text-blue-400">側載安裝教學</summary>
+              <ol class="mt-2 list-decimal list-inside space-y-1">
+                <li>比對 SHA256 後安裝</li>
+                <li>設定 → 允許未知來源</li>
+                <li>設為預設來電篩選 App</li>
+                <li>連線家中 Monster AI（LAN / Tailscale :7860）</li>
+              </ol>
+            </details>
+          </div>
+          <div class="text-center"><img src="${qr}" width="120" height="120" alt="QR" loading="lazy" class="rounded bg-white p-1"/><p class="text-xs text-gray-500 mt-1">掃描下載</p></div>
+        </div>`;
+    }
+
+    function renderUI() {
+      const ml = snapshot?.monsterlock || {};
+      const cg = snapshot?.crimeguard || {};
+      const call = snapshot?.callguard || {};
+      const dc = dotClass(cg);
+      document.getElementById('sidebar-dot').className = 'w-2 h-2 rounded-full ml-auto ' + dc;
+      document.getElementById('nav-dot').className = 'absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full ' + dc;
+
+      const rows = [
+        ['MonsterShield', ml.green_dot ? '保護中' : '待機'],
+        ['CrimeGuard', cg.network_locked ? '已鎖定' : '正常'],
+        ['設備聯繫', cg.device_contact_detected ? (cg.device_contact_type || '偵測') : '無'],
+        ['網絡鎖定', cg.network_locked ? cg.lock_mode : '未鎖定'],
+        ['收數防護', call.rejects_today ? '拒接 ' + call.rejects_today : '待命'],
+      ];
+      document.getElementById('sidebar-rows').innerHTML = rows.map(([l, d]) =>
+        `<div class="flex justify-between px-2 py-1"><span>${l}</span><span>${d}</span></div>`).join('');
+
+      const threat = (call.rejects_today || 0) + (call.reports_today || 0) + (cg.locks_triggered || 0);
+      document.getElementById('threat-stats').innerHTML = [
+        ['今日威脅', threat], ['拒接', call.rejects_today || 0],
+        ['舉報', call.reports_today || 0], ['鎖定', cg.locks_triggered || 0],
+      ].map(([l, v]) => `<div class="p-3 rounded-xl bg-white/5 text-center"><div class="text-2xl font-bold">${v}</div><div class="text-xs text-gray-500">${l}</div></div>`).join('');
+
+      const cards = [
+        ['MonsterShield', ml.green_dot ? '保護中' : '待機', `強度 ${ml.strength || '—'}`],
+        ['CrimeGuard', cg.network_locked ? '已鎖定' : '監控中', `阻擋 ${cg.blocks || 0}`],
+        ['設備聯繫', cg.device_contact_detected ? '警示' : '正常', cg.device_contact_type || '無'],
+        ['網絡鎖定', cg.network_locked ? 'ACTIVE' : '待命', cg.vpn_detected ? 'VPN 偵測' : '無 VPN'],
+        ['收數防護', call.red_dot ? '警示' : '正常', `熱線 ${call.hk_hotline || '18222'}`],
+      ];
+      document.getElementById('status-cards').innerHTML = cards.map(([t, s, d]) =>
+        `<div class="p-4 rounded-xl bg-cyber-card border border-white/10"><div class="flex justify-between mb-2"><span class="font-semibold text-sm">${t}</span><span class="text-xs text-blue-400">${s}</span></div><p class="text-xs text-gray-500">${d}</p></div>`).join('');
+
+      document.getElementById('btn-lock').disabled = !!cg.network_locked;
+    }
+
+    async function poll() {
+      try {
+        const [st, mf, rp] = await Promise.all([
+          fetch('/api/security/status').then(r => r.json()),
+          fetch('/api/callguard/app-manifest').then(r => r.json()),
+          fetch('/api/callguard/reports?limit=10').then(r => r.json()).catch(() => ({ reports: [] })),
+        ]);
+        snapshot = st;
+        manifest = mf;
+        if (mf.app_version) {
+          document.getElementById('apk-ver-side').textContent = 'v' + mf.app_version;
+          document.getElementById('apk-link-side').href = mf.apk_url || document.getElementById('apk-link-side').href;
+        }
+        renderUI();
+        renderApkBlock(document.getElementById('apk-welcome'), mf);
+        renderApkBlock(document.getElementById('apk-security'), mf);
+        const reports = rp.reports || [];
+        document.getElementById('reports-table').innerHTML = reports.length ? (
+          '<table class="w-full"><tr class="text-gray-500"><th class="text-left py-1">類別</th><th class="text-left">Hash</th><th class="text-right">分</th></tr>' +
+          reports.map(r => `<tr><td class="py-1">${r.category}</td><td class="font-mono">${(r.number_hash||'').slice(0,8)}…</td><td class="text-right">${r.score}</td></tr>`).join('') +
+          '</table>'
+        ) : '<p class="text-gray-500">尚無舉報</p>';
+      } catch (e) { console.warn('poll', e); }
+    }
+
+    async function triggerLock() {
+      if (!confirm('確認立即網絡鎖定？（含 VPN 對策）')) return;
+      await fetch('/api/security/crimeguard/lock', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+      poll();
+    }
+
+    async function recoverLock() {
+      const token = document.getElementById('recover-token').value;
+      await fetch('/api/security/crimeguard/recover', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ confirm_token: token }) });
+      poll();
+    }
+
+    poll();
+    setInterval(poll, 3000);
+  </script>
+</body>
+</html>

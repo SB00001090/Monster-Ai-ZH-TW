@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: monsterai-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: monsterai
+      MYSQL_USER: monsterai
+      MYSQL_PASSWORD: monsterai123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # MonsterAi Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: monsterai-app
+    environment:
+      DATABASE_URL: mysql://monsterai:monsterai123@mysql:3306/monsterai
+      NODE_ENV: development
+      VITE_APP_ID: ${VITE_APP_ID}
+      VITE_OAUTH_PORTAL_URL: ${VITE_OAUTH_PORTAL_URL}
+      BUILT_IN_FORGE_API_URL: ${BUILT_IN_FORGE_API_URL}
+      BUILT_IN_FORGE_API_KEY: ${BUILT_IN_FORGE_API_KEY}
+    ports:
+      - "3000:3000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ./:/app
+      - /app/node_modules
+      - /app/dist
+    command: pnpm dev
+
+  # Stable Diffusion WebUI (Optional - for local SD testing)
+  # Uncomment to enable local SD server
+  # sd-webui:
+  #   image: ghcr.io/AUTOMATIC1111/stable-diffusion-webui:latest
+  #   container_name: monsterai-sd
+  #   environment:
+  #     COMMANDLINE_ARGS: "--listen 0.0.0.0 --api"
+  #   ports:
+  #     - "7860:7860"
+  #     - "7861:7861"
+  #   volumes:
+  #     - sd_models:/app/models
+  #     - sd_outputs:/app/outputs
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: 1
+  #             capabilities: [gpu]
+
+volumes:
+  mysql_data:
+  # sd_models:
+  # sd_outputs:
+
+networks:
+  default:
+    name: monsterai-network

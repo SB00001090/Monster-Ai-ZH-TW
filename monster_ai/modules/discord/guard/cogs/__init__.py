@@ -1,0 +1,1 @@
+"""MonsterGuard Discord cogs."""

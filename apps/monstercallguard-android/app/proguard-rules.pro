@@ -1,0 +1,2 @@
+-keep class ai.monster.callguard.** { *; }
+-dontwarn okhttp3.**

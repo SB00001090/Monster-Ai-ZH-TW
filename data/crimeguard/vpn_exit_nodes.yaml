@@ -1,0 +1,6 @@
+exit_nodes: []
+version: vpn-2026.06.26
+vpn_asns:
+- AS9009
+- AS60068
+- AS212238
