@@ -83,6 +83,12 @@ data/outputs/audio/*
 # Duplicate nested project copy (local sync artifact)
 monster_ai/monsterai/
 
+# Zh-TW local staging copy (sync script fills the rest; only docs are tracked)
+Monster-ai Zh-Tw/**
+!Monster-ai Zh-Tw/README.md
+!Monster-ai Zh-Tw/README.en.md
+!Monster-ai Zh-Tw/GITHUB_上傳說明.md
+
 # Bundled Windows tools (re-download locally)
 tools/nssm/*.exe
 
