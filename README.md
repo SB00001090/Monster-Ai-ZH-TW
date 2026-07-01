@@ -46,13 +46,14 @@ A **local-first, open-source AI platform** — chat, roleplay, image generation,
 | `POST /api/guardian/sync/upload` | E2E encrypted OC/chat upload |
 | `POST /api/guardian/sync/download` | Cross-device restore |
 | `POST /api/guardian/errors/report` | Auto error + fix suggestions |
+| `POST /api/guardian/backstory/generate` | Enhanced OC backstory (fingerprint gate + multimodal) |
 | `POST /api/guardian/oc/protect` | OC fingerprint + watermark |
 | `GET /api/guardian/connection` | Tunnel URL + USB APK info |
 | `GET /api/guardian/training/status` | Encrypted training vault status |
 | `POST /api/guardian/training/migrate` | Encrypt legacy plaintext good/bad images |
 | `GET /api/guardian/training/export` | E2E encrypted training bundle for cloud sync |
 
-Docs: [`deploy/guardian/ARCHITECTURE.md`](deploy/guardian/ARCHITECTURE.md) · [`LAUNCH_CHECKLIST.md`](deploy/guardian/LAUNCH_CHECKLIST.md)
+Docs: [`MASTER_SPEC_20260901.md`](deploy/guardian/MASTER_SPEC_20260901.md) · [`ARCHITECTURE.md`](deploy/guardian/ARCHITECTURE.md) · [`LAUNCH_CHECKLIST.md`](deploy/guardian/LAUNCH_CHECKLIST.md)
 
 ## Requirements
 

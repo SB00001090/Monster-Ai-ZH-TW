@@ -13,6 +13,7 @@ from monster_ai.modules.guardian.error_learning import ErrorLearningStore
 from monster_ai.modules.guardian.grok_supervisor import GrokSupervisor
 from monster_ai.modules.guardian.key_manager import TrainingKeyManager
 from monster_ai.modules.guardian.oc_fingerprint import OCFingerprintStore, embed_watermark, generate_fingerprint
+from monster_ai.modules.guardian.backstory import BackstoryGenerator
 from monster_ai.modules.guardian.training_vault import TrainingVault
 
 if TYPE_CHECKING:
@@ -42,6 +43,7 @@ class GuardianService:
         self.oc_store = OCFingerprintStore(root)
         self.errors = ErrorLearningStore(root)
         self.supervisor = GrokSupervisor(root, repair)
+        self.backstory = BackstoryGenerator(self.oc_store)
         self.key_manager = TrainingKeyManager(
             settings,
             repo_root or Path("."),
@@ -118,6 +120,25 @@ class GuardianService:
             "status": "pass" if passed else "fail",
             "action": None if passed else "retry_generation",
         }
+
+    async def generate_backstory(
+        self,
+        *,
+        card: dict[str, Any],
+        owner_id: str = "local",
+        theme: str = "",
+        ephemeral: bool = False,
+        multimodal: bool = True,
+    ) -> dict[str, Any]:
+        return await self.backstory.generate(
+            card=card,
+            owner_id=owner_id,
+            theme=theme,
+            ephemeral=ephemeral or self.settings.ephemeral_chat_default,
+            check_plagiarism=self.settings.oc_fingerprint_enabled,
+            repair=self.repair,
+            multimodal=multimodal,
+        )
 
     def protect_oc(self, card: dict[str, Any], *, owner_id: str = "local") -> dict[str, Any]:
         if not self.settings.oc_fingerprint_enabled:

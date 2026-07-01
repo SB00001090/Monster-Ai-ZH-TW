@@ -39,6 +39,14 @@ class OCProtectRequest(BaseModel):
     owner_id: str = "local"
 
 
+class BackstoryRequest(BaseModel):
+    card: dict[str, Any]
+    owner_id: str = "local"
+    theme: str = ""
+    ephemeral: bool = False
+    multimodal: bool = True
+
+
 class VaultMessageRequest(BaseModel):
     session_id: str
     message: dict[str, Any]
@@ -150,6 +158,19 @@ async def learning_directives(request: Request, limit: int = 5) -> dict:
 async def protect_oc(body: OCProtectRequest, request: Request) -> dict:
     svc = _guardian(request)
     return svc.protect_oc(body.card, owner_id=body.owner_id)
+
+
+@router.post("/backstory/generate")
+async def generate_backstory(body: BackstoryRequest, request: Request) -> dict:
+    """Enhanced Character Backstory — OC fingerprint gate + structured sections + multimodal hints."""
+    svc = _guardian(request)
+    return await svc.generate_backstory(
+        card=body.card,
+        owner_id=body.owner_id,
+        theme=body.theme,
+        ephemeral=body.ephemeral,
+        multimodal=body.multimodal,
+    )
 
 
 @router.post("/vault/message")

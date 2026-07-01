@@ -89,3 +89,15 @@ class OCFingerprintStore:
         if not path.is_file():
             return None
         return json.loads(path.read_text(encoding="utf-8"))
+
+    def find_similar(self, content_hash: str) -> dict[str, Any] | None:
+        if not content_hash:
+            return None
+        for path in self.root.glob("*.json"):
+            try:
+                record = json.loads(path.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError):
+                continue
+            if record.get("content_hash") == content_hash:
+                return record
+        return None
