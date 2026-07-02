@@ -192,6 +192,7 @@ export const monsterApi = {
     bundle_type: "oc_cards" | "chat_sessions" | "preferences" | "training_vault";
     payload: Record<string, unknown> | unknown[];
     device_id?: string;
+    google_access_token?: string;
   }) =>
     request<Record<string, unknown>>("/api/guardian/sync/upload", {
       method: "POST",
@@ -203,19 +204,29 @@ export const monsterApi = {
     provider_sub: string;
     passphrase: string;
     bundle_type: "oc_cards" | "chat_sessions" | "preferences" | "training_vault";
+    google_access_token?: string;
   }) =>
     request<Record<string, unknown>>("/api/guardian/sync/download", {
       method: "POST",
       body: JSON.stringify(body),
     }),
 
-  guardianSyncList: (provider: string, providerSub: string) =>
+  guardianSyncList: (
+    provider: string,
+    providerSub: string,
+    googleAccessToken?: string,
+  ) =>
     request<{
       bundles: Array<{ type: string; uploaded_at: string; device_id?: string }>;
       last_sync: string | null;
       user_hash?: string;
+      storage?: string;
     }>(
-      `/api/guardian/sync/list?provider=${encodeURIComponent(provider)}&provider_sub=${encodeURIComponent(providerSub)}`,
+      `/api/guardian/sync/list?provider=${encodeURIComponent(provider)}&provider_sub=${encodeURIComponent(providerSub)}${
+        googleAccessToken
+          ? `&google_access_token=${encodeURIComponent(googleAccessToken)}`
+          : ""
+      }`,
     ),
 
   guardianTrainingExport: () =>

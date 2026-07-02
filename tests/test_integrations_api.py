@@ -26,6 +26,8 @@ def test_integrations_status(client: TestClient) -> None:
     assert data["quality_threshold"] == 0.7
     assert "supabase_configured" in data
     assert data["supabase_configured"] is False
+    assert "google_drive_configured" in data
+    assert "cloud_sync_backend" in data
 
 
 def test_make_deploy_hook_no_secret(client: TestClient) -> None:

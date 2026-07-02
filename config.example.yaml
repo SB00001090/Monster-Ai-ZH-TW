@@ -317,6 +317,8 @@ guardian:
   tunnel_url_file: ./data/guardian-ai/tunnel_url.txt
   github_releases_page: "https://github.com/SB00001090/Guardian-Ai/releases/latest"
   cloud_sync_enabled: true
+  cloud_sync_backend: dual  # local | google_drive | dual
+  google_drive_folder_name: "Guardian Ai Sync"
   e2e_encryption_required: true
   ephemeral_chat_default: true
   oc_fingerprint_enabled: true

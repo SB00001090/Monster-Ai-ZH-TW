@@ -21,6 +21,7 @@ export function uploadGuardianSync(params: {
   bundleType: SyncBundleType;
   payload: Record<string, unknown> | unknown[];
   deviceId?: string;
+  googleAccessToken?: string;
 }) {
   return monsterApi.guardianSyncUpload({
     provider: params.provider,
@@ -29,6 +30,7 @@ export function uploadGuardianSync(params: {
     bundle_type: params.bundleType,
     payload: params.payload,
     device_id: params.deviceId,
+    google_access_token: params.googleAccessToken,
   });
 }
 
@@ -37,12 +39,14 @@ export function downloadGuardianSync(params: {
   providerSub: string;
   passphrase: string;
   bundleType: SyncBundleType;
+  googleAccessToken?: string;
 }) {
   return monsterApi.guardianSyncDownload({
     provider: params.provider,
     provider_sub: params.providerSub,
     passphrase: params.passphrase,
     bundle_type: params.bundleType,
+    google_access_token: params.googleAccessToken,
   });
 }
 

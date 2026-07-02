@@ -20,6 +20,12 @@ def _make_secret(request: Request) -> str:
     return os.environ.get(env, "")
 
 
+def _google_drive_configured() -> bool:
+    return bool(
+        (os.environ.get("GOOGLE_CLIENT_ID") or os.environ.get("VITE_GOOGLE_CLIENT_ID") or "").strip()
+    )
+
+
 def _supabase_configured() -> bool:
     url = (os.environ.get("VITE_SUPABASE_URL") or os.environ.get("SUPABASE_URL") or "").strip()
     key = (
@@ -56,6 +62,12 @@ async def integrations_status(request: Request) -> dict[str, Any]:
         "sentry_configured": bool(os.environ.get(settings.integrations.sentry_dsn_env)),
         "make_secret_configured": bool(_make_secret(request)),
         "supabase_configured": _supabase_configured(),
+        "google_drive_configured": _google_drive_configured(),
+        "cloud_sync_backend": getattr(
+            getattr(request.app.state.settings, "guardian", None),
+            "cloud_sync_backend",
+            "dual",
+        ),
         "mini_success": success,
         "curriculum": curriculum,
         "quality_threshold": settings.dify.min_quality_score,

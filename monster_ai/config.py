@@ -470,6 +470,10 @@ class GuardianSettings(BaseModel):
     enabled: bool = True
     data_dir: str = "./data/guardian"
     cloud_sync_enabled: bool = True
+    cloud_sync_backend: str = "dual"  # local | google_drive | dual
+    google_drive_folder_name: str = "Guardian Ai Sync"
+    google_client_id_env: str = "GOOGLE_CLIENT_ID"
+    google_client_secret_env: str = "GOOGLE_CLIENT_SECRET"
     e2e_encryption_required: bool = True
     ephemeral_chat_default: bool = True
     anti_screenshot_hint: bool = True

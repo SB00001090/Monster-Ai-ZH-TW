@@ -7,6 +7,7 @@ from typing import Any, TYPE_CHECKING
 from monster_ai.config import GuardianSettings
 from monster_ai.modules.guardian.chat_vault import ChatVault
 from monster_ai.modules.guardian.cloud_sync import CloudSyncStore
+from monster_ai.modules.guardian.hybrid_cloud_sync import HybridCloudSyncStore
 from monster_ai.modules.guardian.crypto import derive_user_key, encrypt_payload
 from monster_ai.modules.guardian.disclaimer import DEVELOPER, get_disclaimer
 from monster_ai.modules.guardian.error_learning import ErrorLearningStore
@@ -48,7 +49,11 @@ class GuardianService:
         self.learning = learning
         root = Path(settings.data_dir)
         root.mkdir(parents=True, exist_ok=True)
-        self.cloud = CloudSyncStore(root)
+        self.cloud = HybridCloudSyncStore(
+            CloudSyncStore(root),
+            backend=settings.cloud_sync_backend,
+            folder_name=settings.google_drive_folder_name,
+        )
         self.vault = ChatVault(root)
         self.oc_store = OCFingerprintStore(root)
         self.manuscripts = ManuscriptStore(root)
@@ -80,6 +85,8 @@ class GuardianService:
             "healthy": True,
             "developer": DEVELOPER,
             "cloud_sync": self.settings.cloud_sync_enabled,
+            "cloud_sync_backend": self.settings.cloud_sync_backend,
+            "google_drive_folder": self.settings.google_drive_folder_name,
             "e2e_required": self.settings.e2e_encryption_required,
             "ephemeral_default": self.settings.ephemeral_chat_default,
             "oc_fingerprint": self.settings.oc_fingerprint_enabled,
@@ -317,6 +324,7 @@ class GuardianService:
         bundle_type: str,
         payload: dict[str, Any] | list[Any],
         device_id: str = "unknown",
+        google_access_token: str | None = None,
     ) -> dict[str, Any]:
         if not self.settings.cloud_sync_enabled:
             return {"ok": False, "reason": "cloud_sync_disabled"}
@@ -329,6 +337,7 @@ class GuardianService:
             bundle_type=bundle_type,
             payload=payload,
             device_id=device_id,
+            google_access_token=google_access_token,
         )
 
     def sync_download(
@@ -338,6 +347,7 @@ class GuardianService:
         provider_sub: str,
         passphrase: str,
         bundle_type: str,
+        google_access_token: str | None = None,
     ) -> dict[str, Any]:
         if not self.settings.cloud_sync_enabled:
             return {"ok": False, "reason": "cloud_sync_disabled"}
@@ -346,10 +356,21 @@ class GuardianService:
             provider_sub=provider_sub,
             passphrase=passphrase,
             bundle_type=bundle_type,
+            google_access_token=google_access_token,
         )
 
-    def sync_list(self, provider: str, provider_sub: str) -> dict[str, Any]:
-        return self.cloud.list_bundles(provider, provider_sub)
+    def sync_list(
+        self,
+        provider: str,
+        provider_sub: str,
+        *,
+        google_access_token: str | None = None,
+    ) -> dict[str, Any]:
+        return self.cloud.list_bundles(
+            provider,
+            provider_sub,
+            google_access_token=google_access_token,
+        )
 
     def vault_store(
         self,

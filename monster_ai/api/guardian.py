@@ -17,6 +17,7 @@ class SyncUploadRequest(BaseModel):
     bundle_type: str = Field(pattern=r"^(oc_cards|chat_sessions|preferences|training_vault)$")
     payload: dict[str, Any] | list[Any]
     device_id: str = "web"
+    google_access_token: str | None = None
 
 
 class SyncDownloadRequest(BaseModel):
@@ -24,6 +25,7 @@ class SyncDownloadRequest(BaseModel):
     provider_sub: str = Field(min_length=1)
     passphrase: str = Field(min_length=8)
     bundle_type: str = Field(pattern=r"^(oc_cards|chat_sessions|preferences|training_vault)$")
+    google_access_token: str | None = None
 
 
 class ErrorReportRequest(BaseModel):
@@ -172,6 +174,7 @@ async def sync_upload(body: SyncUploadRequest, request: Request) -> dict:
         bundle_type=body.bundle_type,
         payload=body.payload,
         device_id=body.device_id,
+        google_access_token=body.google_access_token,
     )
 
 
@@ -183,6 +186,7 @@ async def sync_download(body: SyncDownloadRequest, request: Request) -> dict:
         provider_sub=body.provider_sub,
         passphrase=body.passphrase,
         bundle_type=body.bundle_type,
+        google_access_token=body.google_access_token,
     )
 
 
@@ -191,11 +195,12 @@ async def sync_list(
     request: Request,
     provider: str,
     provider_sub: str,
+    google_access_token: str | None = None,
 ) -> dict:
     if provider not in {"google", "github"}:
         raise HTTPException(400, "provider must be google or github")
     svc = _guardian(request)
-    return svc.sync_list(provider, provider_sub)
+    return svc.sync_list(provider, provider_sub, google_access_token=google_access_token)
 
 
 @router.post("/errors/report")

@@ -19,6 +19,7 @@ import {
   Cloud,
   Database,
   ExternalLink,
+  HardDrive,
   GitBranch,
   Layers,
   Shield,
@@ -208,6 +209,37 @@ export default function IntegrationsPage() {
           <Button size="sm" variant="outline" asChild>
             <a href="/deploy">開啟部署設定</a>
           </Button>
+        </NeonPanel>
+
+        <NeonPanel className="space-y-3">
+          <h2 className="font-semibold text-[var(--neon-cyan)] flex items-center gap-2">
+            <HardDrive className="w-4 h-4" /> Google Drive
+            <StatusDot ok={Boolean(status?.google_drive_configured)} />
+          </h2>
+          <p className="text-xs text-[var(--neon-muted)]">
+            E2E 加密同步主要雲端鏡像（推薦）— 資料夾 Guardian Ai Sync
+          </p>
+          <ul className="text-sm space-y-1 text-[var(--neon-muted)]">
+            <li className="flex items-center gap-2">
+              <StatusDot ok={Boolean(status?.google_drive_configured)} /> GOOGLE_CLIENT_ID 已設定
+            </li>
+            <li className="flex items-center gap-2">
+              <StatusDot ok={status?.cloud_sync_backend === "dual" || status?.cloud_sync_backend === "google_drive"} />
+              後端 {String(status?.cloud_sync_backend ?? "dual")}
+            </li>
+          </ul>
+          <Button size="sm" variant="outline" asChild>
+            <a
+              href="https://console.cloud.google.com/apis/library/drive.googleapis.com"
+              target="_blank"
+              rel="noreferrer"
+            >
+              啟用 Drive API <ExternalLink className="w-3 h-3 ml-1" />
+            </a>
+          </Button>
+          <p className="text-[10px] text-[var(--neon-muted)]">
+            設定見 deploy/guardian/GOOGLE_DRIVE.md · scope: drive.file
+          </p>
         </NeonPanel>
 
         <NeonPanel className="space-y-3">
