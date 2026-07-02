@@ -12,11 +12,24 @@ Guardian Ai remains **local-first**. Supabase is optional cloud mirror for profi
 2. **New project** → name e.g. `guardian-ai` → region **`ap-southeast-2`** (Sydney).
 3. Save the database password securely.
 
-## 2. Run schema
+## 2. Connect GitHub (recommended)
 
-In **SQL Editor**, paste and run [`guardian_schema.sql`](guardian_schema.sql).
+See **[GITHUB.md](GITHUB.md)** for full steps.
 
-## 3. Enable Auth providers (optional)
+Quick summary:
+
+1. **Project Settings → Integrations → GitHub** → Authorize
+2. Repository: `SB00001090/Guardian-Ai`
+3. **Working directory:** `deploy`
+4. Enable **Deploy to production**
+
+Migrations live in `deploy/supabase/migrations/` and deploy on push to `main`.
+
+## 3. Run schema (manual alternative)
+
+If you are **not** using GitHub Integration yet, run [`guardian_schema.sql`](guardian_schema.sql) in **SQL Editor**.
+
+## 4. Enable Auth providers (optional)
 
 **Authentication → Providers:** enable Google, GitHub, Discord to mirror Guardian OAuth.
 
@@ -29,7 +42,7 @@ http://127.0.0.1:7860/login
 
 Production: add your Cloudflare Pages URL.
 
-## 4. Environment variables
+## 5. Environment variables
 
 Copy from **Project Settings → API**:
 
@@ -42,7 +55,7 @@ SUPABASE_SERVICE_ROLE_KEY=eyJ...
 
 Add to `.env` and Cloudflare Pages env.
 
-## 5. Verify
+## 6. Verify
 
 1. Restart `run.bat` or `pnpm dev` + `python main.py`.
 2. Open `/integrations` → **Supabase** row should show green when URL + anon key are set.
