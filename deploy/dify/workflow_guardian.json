@@ -1,7 +1,7 @@
 {
-  "name": "MonsterGuardian_AI_FullStack",
+  "name": "GuardianAi_FullStack",
   "description": "聊天區安全 + OC 保護 + 品質控制 + 錯誤處理 + 雲端同步 E2E",
-  "developer": "Suckbob | Monster Guardian AI",
+  "developer": "Suckbob | Guardian Ai",
   "variables": {
     "MONSTER_TUNNEL_URL": "https://xxx.trycloudflare.com",
     "SENTRY_INGEST_URL": "",

@@ -21,6 +21,8 @@ async def send_discord_error_report(
     context: str | None = None,
     source: str = "guardian",
     account_id: str | None = None,
+    jam_url: str | None = None,
+    auto_fix_action: str | None = None,
 ) -> dict[str, Any]:
     if not webhook_url or not webhook_url.startswith("https://discord.com/api/webhooks/"):
         return {"ok": False, "reason": "invalid_webhook_url"}
@@ -41,6 +43,10 @@ async def send_discord_error_report(
         embed["fields"].append({"name": "Context", "value": context[:900], "inline": False})
     if stack:
         embed["fields"].append({"name": "Stack", "value": f"```\n{stack[:900]}\n```", "inline": False})
+    if auto_fix_action:
+        embed["fields"].append({"name": "Auto-fix", "value": auto_fix_action[:200], "inline": True})
+    if jam_url:
+        embed["fields"].append({"name": "Jam replay", "value": jam_url[:900], "inline": False})
 
     payload = {"embeds": [embed]}
     try:

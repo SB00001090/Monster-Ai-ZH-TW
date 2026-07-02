@@ -29,7 +29,7 @@ async def pricing(region: str = "GLOBAL") -> dict:
 
 @router.get("/pricing/all")
 async def pricing_all() -> dict:
-    return {"plans": TrialManager.all_pricing(), "developer": "Suckbob | Monster AI"}
+    return {"plans": TrialManager.all_pricing(), "developer": "Suckbob | Guardian Ai"}
 
 
 @router.get("/trial")

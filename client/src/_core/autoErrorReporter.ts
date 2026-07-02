@@ -1,7 +1,10 @@
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import superjson from "superjson";
 import type { AppRouter } from "../../../server/routers";
-import { reportGuardianError } from "../lib/guardianApi";
+import {
+  getStoredGuardianAccountId,
+  reportGuardianError,
+} from "../lib/guardianApi";
 
 type ClientAction =
   | { type: "guest" }
@@ -92,12 +95,23 @@ export async function reportError(
       window.setTimeout(() => applyClientAction(result.clientAction), delay);
     }
 
+    const jamTeamId = import.meta.env.VITE_JAM_TEAM_ID?.trim();
+    const jamUrl =
+      jamTeamId && typeof window !== "undefined"
+        ? `https://jam.dev/c/${jamTeamId}`
+        : undefined;
+
     void reportGuardianError({
       errorType: err.name || "Error",
       message: err.message,
       stack: err.stack,
       context,
       source,
+      accountId: getStoredGuardianAccountId() ?? undefined,
+      autoFixAction: result.fixAction,
+      autoFixResult: result.fixResult,
+      incidentId: result.incidentId,
+      jamUrl,
     }).catch(() => undefined);
 
     window.dispatchEvent(

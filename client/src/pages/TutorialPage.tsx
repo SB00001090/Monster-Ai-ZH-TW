@@ -58,7 +58,7 @@ export default function TutorialPage() {
         {/* Header */}
         <div className="mb-8 flex items-start justify-between">
           <div>
-            <h1 className="text-4xl font-bold text-foreground mb-2">{t("tutorials.welcome", "Welcome to MonsterAi")}</h1>
+            <h1 className="text-4xl font-bold text-foreground mb-2">{t("tutorials.welcome", "Welcome to Guardian Ai")}</h1>
             <p className="text-muted-foreground">{t("tutorials.getStarted", "Get started with our interactive tutorials")}</p>
           </div>
           <Link href="/">

@@ -1,4 +1,4 @@
-/** Monster Guardian AI client — re-exports from monsterApi. */
+/** Guardian Ai API client — re-exports from monsterApi. */
 import { monsterApi } from "./monsterApi";
 import type { OAuthProvider } from "@/const";
 
@@ -52,6 +52,12 @@ export function reportGuardianError(params: {
   stack?: string;
   context?: string;
   source?: string;
+  accountId?: string;
+  discordNotify?: boolean;
+  jamUrl?: string;
+  autoFixAction?: string;
+  autoFixResult?: string;
+  incidentId?: number;
 }) {
   return monsterApi.guardianReportError({
     error_type: params.errorType,
@@ -59,6 +65,12 @@ export function reportGuardianError(params: {
     stack: params.stack,
     context: params.context,
     source: params.source,
+    account_id: params.accountId,
+    discord_notify: params.discordNotify,
+    jam_url: params.jamUrl,
+    auto_fix_action: params.autoFixAction,
+    auto_fix_result: params.autoFixResult,
+    incident_id: params.incidentId,
   });
 }
 
@@ -138,3 +150,49 @@ export const linkGuardianAccount = (params: {
 
 export const getGuardianAccountStatus = (accountId: string) =>
   monsterApi.guardianAccountStatus(accountId);
+
+export const getManuscriptDiff = (ocId: string, v1: number, v2: number) =>
+  monsterApi.guardianManuscriptDiff(ocId, v1, v2);
+
+export const appendDiary = (
+  characterId: string,
+  body: {
+    sessionId: string;
+    messages: Array<Record<string, unknown>>;
+    vaultKey: string;
+    mood?: string;
+  },
+) =>
+  monsterApi.guardianDiaryAppend(characterId, {
+    session_id: body.sessionId,
+    messages: body.messages,
+    vault_key: body.vaultKey,
+    mood: body.mood,
+  });
+
+export const readDiary = (characterId: string, date: string, vaultKey: string) =>
+  monsterApi.guardianDiaryRead(characterId, date, vaultKey);
+
+export const summarizeDiary = (characterId: string, date: string, vaultKey: string) =>
+  monsterApi.guardianDiarySummary(characterId, date, vaultKey);
+
+export const listDiaryDates = (characterId: string) =>
+  monsterApi.guardianDiaryDates(characterId);
+
+export const listCharacterShares = (ownerId: string) =>
+  monsterApi.guardianShareList(ownerId);
+
+export const bindDiscordWebhook = (accountId: string, webhookUrl: string) =>
+  monsterApi.guardianAccountDiscordWebhook(accountId, webhookUrl);
+
+export const GUARDIAN_ACCOUNT_KEY = "guardian_account_id";
+export const GUARDIAN_DIARY_VAULT_KEY = "guardian_diary_vault_key";
+
+export function getStoredGuardianAccountId(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(GUARDIAN_ACCOUNT_KEY);
+}
+
+export function setStoredGuardianAccountId(id: string): void {
+  localStorage.setItem(GUARDIAN_ACCOUNT_KEY, id);
+}

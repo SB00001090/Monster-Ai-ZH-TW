@@ -191,7 +191,7 @@ export default function GuardianSyncPage() {
   if (isGuest || !user) {
     return (
       <NeonShell
-        title="Monster Guardian 雲端同步"
+        title="Guardian Ai 雲端同步"
         subtitle="端到端加密 · Google / GitHub 身份驗證"
         badge="Developed by Suckbob | Guardian Ai"
       >
@@ -212,7 +212,7 @@ export default function GuardianSyncPage() {
   if (!provider) {
     return (
       <NeonShell
-        title="Monster Guardian 雲端同步"
+        title="Guardian Ai 雲端同步"
         subtitle="需要 Google 或 GitHub OAuth"
         badge="Developed by Suckbob | Guardian Ai"
       >
@@ -229,7 +229,7 @@ export default function GuardianSyncPage() {
 
   return (
     <NeonShell
-      title="Monster Guardian 雲端同步"
+      title="Guardian Ai 雲端同步"
       subtitle="OC 文案 · 對話 · 偏好 · 訓練 Vault — 全程端到端加密"
       badge="Developed by Suckbob | Guardian Ai"
     >

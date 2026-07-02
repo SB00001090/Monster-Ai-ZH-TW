@@ -1,4 +1,4 @@
-/** Monster AI Python backend client (7860 / Cloudflare Tunnel). */
+/** Guardian Ai Python backend client (7860 / Cloudflare Tunnel). */
 
 const STORAGE_KEY = "monster_api_base";
 
@@ -57,6 +57,9 @@ async function request<T>(
   }
   return r.json() as Promise<T>;
 }
+
+/** Low-level fetch helper for Guardian / learning hooks. */
+export const monsterFetch = request;
 
 export type EcosystemBundle = {
   id: string;
@@ -149,6 +152,9 @@ export const monsterApi = {
   commercialTrialStart: () =>
     request<Record<string, unknown>>("/api/commercial/trial/start", { method: "POST" }),
 
+  commercialPricingAll: () =>
+    request<Record<string, unknown>>("/api/commercial/pricing/all"),
+
   difyGenerate: (body: {
     prompt: string;
     template_id?: string;
@@ -229,6 +235,10 @@ export const monsterApi = {
     source?: string;
     account_id?: string;
     discord_notify?: boolean;
+    jam_url?: string;
+    auto_fix_action?: string;
+    auto_fix_result?: string;
+    incident_id?: number;
   }) =>
     request<Record<string, unknown>>("/api/guardian/errors/report", {
       method: "POST",
@@ -243,6 +253,51 @@ export const monsterApi = {
       method: "POST",
       body: JSON.stringify({ version }),
     }),
+
+  guardianManuscriptDiff: (ocId: string, v1: number, v2: number) =>
+    request<Record<string, unknown>>(
+      `/api/guardian/manuscript/${encodeURIComponent(ocId)}/diff?v1=${v1}&v2=${v2}`,
+    ),
+
+  guardianDiaryAppend: (
+    characterId: string,
+    body: {
+      session_id: string;
+      messages: Array<Record<string, unknown>>;
+      vault_key: string;
+      mood?: string;
+    },
+  ) =>
+    request<Record<string, unknown>>(`/api/guardian/diary/${encodeURIComponent(characterId)}/append`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  guardianDiaryRead: (characterId: string, date: string, vaultKey: string) =>
+    request<Record<string, unknown>>(`/api/guardian/diary/${encodeURIComponent(characterId)}/read`, {
+      method: "POST",
+      body: JSON.stringify({ date, vault_key: vaultKey }),
+    }),
+
+  guardianDiarySummary: (characterId: string, date: string, vaultKey: string) =>
+    request<Record<string, unknown>>(`/api/guardian/diary/${encodeURIComponent(characterId)}/summary`, {
+      method: "POST",
+      body: JSON.stringify({ date, vault_key: vaultKey }),
+    }),
+
+  guardianDiaryDates: (characterId: string) =>
+    request<{ dates: string[] }>(`/api/guardian/diary/${encodeURIComponent(characterId)}/dates`),
+
+  guardianShareList: (ownerId: string) =>
+    request<Record<string, unknown>>(
+      `/api/guardian/share/list?owner_id=${encodeURIComponent(ownerId)}`,
+    ),
+
+  guardianAccountDiscordWebhook: (accountId: string, webhookUrl: string) =>
+    request<Record<string, unknown>>(
+      `/api/guardian/account/discord-webhook?account_id=${encodeURIComponent(accountId)}`,
+      { method: "POST", body: JSON.stringify({ webhook_url: webhookUrl }) },
+    ),
 
   guardianShareCreate: (body: {
     oc_id: string;
@@ -313,6 +368,20 @@ export const monsterApi = {
     request<Record<string, unknown>>("/api/guardian/network-learning/art-triage/run", {
       method: "POST",
       body: JSON.stringify({}),
+    }),
+
+  guardianToddlerStatus: () =>
+    request<Record<string, unknown>>("/api/guardian/learning/toddler/status"),
+
+  guardianToddlerProgress: () =>
+    request<Record<string, unknown>>("/api/guardian/learning/toddler/progress", {
+      method: "POST",
+    }),
+
+  guardianToddlerFeedback: (body: { reason?: string }) =>
+    request<Record<string, unknown>>("/api/guardian/learning/toddler/feedback", {
+      method: "POST",
+      body: JSON.stringify(body),
     }),
 };
 

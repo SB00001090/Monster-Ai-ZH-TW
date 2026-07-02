@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { APP_LOGO_SRC } from "@/const";
+import { APP_LOGO_SRC, APP_NAME } from "@/const";
 
 const AGE_VERIFIED_KEY = "monsterai_age_verified";
 
@@ -34,14 +34,14 @@ export function AgeVerification({ children }: { children: React.ReactNode }) {
         <div className="mb-6">
           <img
             src={APP_LOGO_SRC}
-            alt="MonsterAi"
+            alt={APP_NAME}
             className="w-16 h-16 mx-auto rounded-xl"
           />
         </div>
 
         {/* Title */}
-        <h1 className="text-2xl font-bold text-white mb-2">MonsterAi</h1>
-        <p className="text-zinc-400 mb-6">Free AI Community Platform</p>
+        <h1 className="text-2xl font-bold text-white mb-2">{APP_NAME}</h1>
+        <p className="text-zinc-400 mb-6">Local-first AI security & creative platform</p>
 
         {/* Warning */}
         <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-6">

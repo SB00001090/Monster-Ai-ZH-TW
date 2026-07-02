@@ -38,6 +38,10 @@ class ErrorLearningStore:
         source: str = "api",
         fix_suggestion: str | None = None,
         code_snippet: str | None = None,
+        auto_fix_action: str | None = None,
+        auto_fix_result: str | None = None,
+        jam_url: str | None = None,
+        incident_id: int | None = None,
     ) -> dict[str, Any]:
         suggestion = fix_suggestion or self._suggest(message, context or "")
         snippet = code_snippet or self._code_snippet(message, context or "")
@@ -49,6 +53,10 @@ class ErrorLearningStore:
             "source": source,
             "fix_suggestion": suggestion,
             "code_snippet": snippet,
+            "auto_fix_action": auto_fix_action,
+            "auto_fix_result": (auto_fix_result or "")[:2000] or None,
+            "jam_url": jam_url,
+            "incident_id": incident_id,
             "ingested_at": datetime.now(timezone.utc).isoformat(),
         }
         with self.log_path.open("a", encoding="utf-8") as f:
@@ -68,7 +76,7 @@ class ErrorLearningStore:
             return (
                 "# Cloudflare Tunnel only\n"
                 "MONSTER_TUNNEL_URL=https://xxx.trycloudflare.com\n"
-                "# scripts/callguard/run-tunnel.bat"
+                "# scripts/guardian/run-tunnel.bat"
             )
         if "quality" in blob or "70" in blob:
             return (

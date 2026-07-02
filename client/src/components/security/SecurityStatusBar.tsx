@@ -34,7 +34,7 @@ export default function SecurityStatusBar({ snapshot, onOpenSecurity }: Props) {
   const cg = snapshot?.crimeguard;
   const rows = [
     {
-      label: "MonsterShield",
+      label: "Guardian Shield",
       status: rowStatus(!!ml?.enabled, !!ml?.green_dot, false),
       detail: ml?.green_dot ? "保護中" : ml?.enabled ? "警示" : "關閉",
     },

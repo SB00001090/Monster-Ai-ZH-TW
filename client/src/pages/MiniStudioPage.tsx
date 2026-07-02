@@ -148,7 +148,7 @@ export default function MiniStudioPage() {
     <NeonShell
       title="MINI STUDIO"
       subtitle="R18+ 圖像 · 極度相似 Likeness · 圖+音多模態 · 品質門檻 70%"
-      badge={stats || "Mini Monster AI v1.0"}
+      badge={stats || "Guardian Ai Mini Studio v1.0"}
     >
       {!online && (
         <NeonPanel className="border-[var(--neon-pink)] text-sm text-[var(--neon-pink)]">

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-/** Cyberpunk neon wrapper — Developed by Suckbob | Monster AI */
+/** Cyberpunk neon wrapper — Developed by Suckbob | Guardian Ai */
 export function NeonShell({
   title,
   subtitle,

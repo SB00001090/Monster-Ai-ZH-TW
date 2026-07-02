@@ -71,14 +71,14 @@ export default function IntegrationsPage() {
   const saveProvider = (p: GenProvider) => {
     setGenProvider(p);
     setProvider(p);
-    toast.success(p === "dify" ? "已切換至 Dify 工作流" : "已切換至 Monster 原生");
+    toast.success(p === "dify" ? "已切換至 Dify 工作流" : "已切換至 Guardian Ai 原生");
   };
 
   const testDify = async () => {
     setBusy(true);
     try {
       const r = await monsterApi.difyStatus();
-      toast.success(r.configured ? "Dify 已連線" : "Dify 未設定 — 將使用 Monster 後備");
+      toast.success(r.configured ? "Dify 已連線" : "Dify 未設定 — 將使用 Guardian Ai 後備");
       void refresh();
     } catch (e) {
       toast.error(String(e));
@@ -111,7 +111,7 @@ export default function IntegrationsPage() {
               className={provider === "monster" ? "neon-btn-primary" : ""}
               onClick={() => saveProvider("monster")}
             >
-              Monster 原生
+              Guardian Ai 原生
             </Button>
             <Button
               size="sm"

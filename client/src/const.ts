@@ -1,6 +1,9 @@
 export { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 
-/** Default Monster AI brand mark (served from client/public). */
+/** Product display name — all user-facing UI must use this. */
+export const APP_NAME = import.meta.env.VITE_APP_NAME?.trim() || "Guardian Ai";
+
+/** Default brand mark (served from client/public). */
 export const APP_LOGO_SRC = import.meta.env.VITE_APP_LOGO || "/monster-logo.png";
 
 export type OAuthProvider = "google" | "github" | "discord";

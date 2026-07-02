@@ -79,7 +79,7 @@ export default function EcosystemPage() {
     <NeonShell
       title="一鍵安裝完整生態"
       subtitle="RP + 圖像 + 影片 + 音訊 + R18+ + Likeness · 安全網絡下載 · 與 Mini 雙向共享"
-      badge="Developed by Suckbob | Monster AI"
+      badge="Developed by Suckbob | Guardian Ai"
     >
       {!online && (
         <NeonPanel className="border-[var(--neon-pink)]">

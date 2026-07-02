@@ -24,7 +24,7 @@ Developed by Suckbob | Guardian Ai
 - [ ] `python scripts/deploy_cloudflare.py --tunnel` 取得 HTTPS URL
 - [ ] `MONSTER_TUNNEL_URL` 寫入 `data/callguard/tunnel_url.txt`
 - [ ] Android `TunnelConnection.kt` 拒絕 Tailscale / IP
-- [ ] USB：`scripts/callguard/install-apk-adb.ps1` 安裝最新 APK
+- [ ] USB：`scripts/guardian/install-apk-adb.ps1` 安裝最新 APK
 - [ ] **無 QR Code**（`grep -ri qrserver` 為空）
 
 ## 整合

@@ -36,7 +36,7 @@ function SpinnerFallback({ onComplete }: { onComplete: () => void }) {
         <Loader2 className="absolute inset-0 m-auto w-10 h-10 animate-spin text-accent" />
       </div>
       <div className="text-center space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Monster AI</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">Guardian Ai</h1>
         <p className="text-sm text-muted-foreground">Local-first · Self-healing · Open source</p>
       </div>
     </div>

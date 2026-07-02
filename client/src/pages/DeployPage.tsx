@@ -27,7 +27,7 @@ export default function DeployPage() {
   const switchProvider = (p: GenProvider) => {
     setGenProvider(p);
     setProvider(p);
-    toast.success(p === "dify" ? "Dify 工作流模式" : "Monster 原生模式");
+    toast.success(p === "dify" ? "Dify 工作流模式" : "Guardian Ai 原生模式");
   };
 
   const ws = typeof window !== "undefined" ? monsterWsUrl() : "";
@@ -35,8 +35,8 @@ export default function DeployPage() {
   return (
     <NeonShell
       title="部署與連線"
-      subtitle="Cloudflare Pages 前端 + Cloudflare Tunnel 暴露本機 Monster AI 後端"
-      badge="Developed by Suckbob | Monster AI"
+      subtitle="Cloudflare Pages 前端 + Cloudflare Tunnel 暴露本機 Guardian Ai 後端"
+      badge="Developed by Suckbob | Guardian Ai"
     >
       <div className="grid md:grid-cols-2 gap-4">
         <NeonPanel className="space-y-4">
@@ -80,7 +80,7 @@ export default function DeployPage() {
               className={provider === "monster" ? "neon-btn-primary" : ""}
               onClick={() => switchProvider("monster")}
             >
-              Monster 原生
+              Guardian Ai 原生
             </Button>
             <Button
               size="sm"
@@ -92,7 +92,7 @@ export default function DeployPage() {
             </Button>
           </div>
           <p className="text-xs text-[var(--neon-muted)]">
-            Dify 未設定時自動 fallback 至 Monster。詳見「平台整合」頁。
+            Dify 未設定時自動 fallback 至 Guardian Ai。詳見「平台整合」頁。
           </p>
           <Button size="sm" variant="outline" asChild>
             <a href="/integrations">開啟平台整合</a>

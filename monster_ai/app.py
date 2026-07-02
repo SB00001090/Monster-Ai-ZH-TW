@@ -1,6 +1,7 @@
 """FastAPI application factory."""
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 from contextlib import asynccontextmanager
@@ -205,7 +206,36 @@ async def lifespan(app: FastAPI):
             app.state.roleplay,
         )
 
+    nl_daemon_task: asyncio.Task | None = None
+    guardian = getattr(app.state, "guardian", None)
+    nl_settings = getattr(getattr(guardian, "settings", None), "network_learning", None)
+    if (
+        guardian
+        and guardian.network_learning
+        and nl_settings
+        and nl_settings.enabled
+        and nl_settings.background_daemon
+    ):
+        interval = max(300, int(nl_settings.daemon_interval_seconds))
+
+        async def _network_learning_daemon() -> None:
+            while True:
+                await asyncio.sleep(interval)
+                try:
+                    await guardian.network_learning.trigger(force=False)
+                except Exception:  # noqa: BLE001
+                    logger.exception("network learning daemon tick failed")
+
+        nl_daemon_task = asyncio.create_task(_network_learning_daemon())
+
     yield
+
+    if nl_daemon_task is not None:
+        nl_daemon_task.cancel()
+        try:
+            await nl_daemon_task
+        except asyncio.CancelledError:
+            pass
 
     if discord_svc is not None:
         await discord_svc.stop_guard()
@@ -304,6 +334,7 @@ def create_app(settings: Settings) -> FastAPI:
     learning.bind_image_learner(image_learner)
     guardian_svc.learning = learning
     guardian_svc.attach_network_learning(learning.web, image_learner=image_learner)
+    code_repair.bind_error_store(guardian_svc.errors)
 
     def _web_network_allowed() -> tuple[bool, str]:
         if crimeguard.state.network_locked:

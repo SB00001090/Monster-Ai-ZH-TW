@@ -22,7 +22,7 @@ import {
 import { getLoginUrl } from "@/const";
 import { useGuest } from "@/contexts/GuestContext";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, MessageCircle, Settings, BookOpen, Cpu, Bot, MessageSquare, Cog, Music, Film, TrendingUp, Sparkles, Download, Cloud, Plug, Shield, Globe } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, MessageCircle, Settings, BookOpen, Cpu, Bot, MessageSquare, Cog, Music, Film, TrendingUp, Sparkles, Download, Cloud, Plug, Shield, Globe, Baby, Library, CreditCard } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
@@ -46,6 +46,9 @@ const menuItems = [
   { icon: Cloud, label: "navigation.deploy", path: "/deploy" },
   { icon: Shield, label: "navigation.guardianSync", path: "/guardian-sync" },
   { icon: Globe, label: "navigation.networkLearning", path: "/network-learning" },
+  { icon: Baby, label: "navigation.toddlerLearning", path: "/toddler-learning" },
+  { icon: Library, label: "navigation.characterLifecycle", path: "/guardian-characters" },
+  { icon: CreditCard, label: "navigation.pricing", path: "/pricing" },
   { icon: Plug, label: "navigation.integrations", path: "/integrations" },
   { icon: Cog, label: "navigation.settings", path: "/settings" },
   { icon: Music, label: "navigation.music", path: "/music" },

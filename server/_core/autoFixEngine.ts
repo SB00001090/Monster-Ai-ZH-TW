@@ -72,6 +72,33 @@ async function triggerPythonHeal(): Promise<string> {
   }
 }
 
+async function reportToGuardian(
+  incident: ErrorIncident,
+  fix: AutoFixResult,
+): Promise<void> {
+  const body = {
+    error_type: incident.errorType,
+    message: incident.message,
+    stack: incident.stack,
+    context: incident.context,
+    source: incident.source,
+    incident_id: incident.id,
+    auto_fix_action: fix.fixAction,
+    auto_fix_result: fix.fixResult,
+    jam_url: process.env.JAM_REPLAY_URL || undefined,
+  };
+  try {
+    await fetch(`${PYTHON_API_URL}/api/guardian/errors/report`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(8000),
+    });
+  } catch {
+    // non-fatal — client may also dual-write
+  }
+}
+
 export async function runAutoFix(incident: ErrorIncident): Promise<AutoFixResult> {
   const action = classify(incident.message, incident.context ?? "");
   await updateIncident(incident.id, { status: "fixing", fixAction: action });
@@ -121,11 +148,14 @@ export async function runAutoFix(incident: ErrorIncident): Promise<AutoFixResult
     fixResult,
   });
 
-  return {
+  const result: AutoFixResult = {
     fixAttempted: action !== "log_only",
     fixAction: action,
     fixResult,
     clientAction,
     status,
   };
+
+  await reportToGuardian(incident, result);
+  return result;
 }

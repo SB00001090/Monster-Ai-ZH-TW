@@ -246,6 +246,10 @@ class GuardianService:
         source: str = "api",
         account_id: str | None = None,
         discord_notify: bool = False,
+        jam_url: str | None = None,
+        auto_fix_action: str | None = None,
+        auto_fix_result: str | None = None,
+        incident_id: int | None = None,
     ) -> dict[str, Any]:
         record = self.errors.ingest(
             error_type=error_type,
@@ -253,6 +257,10 @@ class GuardianService:
             stack=stack,
             context=context,
             source=source,
+            auto_fix_action=auto_fix_action,
+            auto_fix_result=auto_fix_result,
+            jam_url=jam_url,
+            incident_id=incident_id,
         )
         if self.learning and self.settings.grok_supervision_enabled:
             await self._feed_learning(record)
@@ -268,6 +276,8 @@ class GuardianService:
                     context=context,
                     source=source,
                     account_id=account_id,
+                    jam_url=jam_url,
+                    auto_fix_action=auto_fix_action,
                 )
         out: dict[str, Any] = {"ok": True, **record}
         if discord_result:

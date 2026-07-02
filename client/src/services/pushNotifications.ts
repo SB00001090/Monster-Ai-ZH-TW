@@ -45,7 +45,7 @@ export class PushNotificationService {
       
       // Show local notification
       this.showLocalNotification(
-        notification.title || 'MonsterAi',
+        notification.title || 'Guardian Ai',
         notification.body || 'New message'
       );
     });
@@ -84,7 +84,7 @@ export class PushNotificationService {
             id: Date.now(),
             smallIcon: 'ic_stat_icon_config_sample',
             largeBody: body,
-            summaryText: 'MonsterAi',
+            summaryText: 'Guardian Ai',
             extra: data,
           },
         ],

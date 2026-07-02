@@ -1,6 +1,6 @@
 {
   "common": {
-    "welcome": "Welcome to Monster AI",
+    "welcome": "Welcome to Guardian Ai",
     "or": "Or",
     "loading": "Loading…",
     "back": "Back",
@@ -42,6 +42,9 @@
     "deploy": "Deploy & Connect",
     "guardianSync": "Guardian Sync",
     "networkLearning": "Network Learning",
+    "toddlerLearning": "Toddler Learning",
+    "characterLifecycle": "Character Lifecycle",
+    "pricing": "Pricing & Trial",
     "integrations": "Integrations"
   },
   "analytics": {
@@ -166,7 +169,7 @@
   },
   "home": {
     "welcomeUser": "Welcome back, {{name}}",
-    "welcomeGuest": "Welcome to Monster AI",
+    "welcomeGuest": "Welcome to Guardian Ai",
     "subtitle": "Chat with characters, generate images, and run everything locally",
     "pythonBackend": "Python Backend",
     "online": "Online",
@@ -185,7 +188,7 @@
   },
   "community": {
     "community": "Community Characters",
-    "communityDescription": "Discover and clone characters created by the Monster AI community",
+    "communityDescription": "Discover and clone characters created by the Guardian Ai community",
     "by": "by",
     "communityMember": "Community Member",
     "chats": "chats",
@@ -207,7 +210,7 @@
     "feedbackError": "Failed to submit report"
   },
   "tutorials": {
-    "welcome": "Welcome to Monster AI",
+    "welcome": "Welcome to Guardian Ai",
     "getStarted": "Get started with our interactive tutorials",
     "allCategories": "All",
     "watchVideo": "Watch Video",
@@ -392,20 +395,20 @@
     "submit": "Submit Report"
   },
   "mobileStats": {
-    "title": "MonsterAi Stats",
+    "title": "Guardian Ai Stats",
     "feedback": "Feedback",
     "rating": "Rating",
     "improvements": "Improvements",
     "optimizations": "Optimizations",
-    "learning": "MonsterAi is learning from your feedback. More interactions will help optimize responses.",
+    "learning": "Guardian Ai is learning from your feedback. More interactions will help optimize responses.",
     "performanceSummary": "Performance Summary",
     "totalInteractions": "Total Interactions",
     "qualityScore": "Quality Score",
     "aiImprovements": "AI Improvements",
     "promptOptimizations": "Prompt Optimizations",
     "insights": "Insights",
-    "insightGood": "Great! MonsterAi is performing well. Keep providing feedback.",
-    "insightProgress": "Good progress! Your feedback is helping MonsterAi learn.",
+    "insightGood": "Great! Guardian Ai is performing well. Keep providing feedback.",
+    "insightProgress": "Good progress! Your feedback is helping Guardian Ai learn.",
     "na": "N/A"
   },
   "admin": {
@@ -479,7 +482,7 @@
     "toastFixing": "Reported — attempting auto-fix…"
   },
   "chatPage": {
-    "welcomeTitle": "Welcome to MonsterAi",
+    "welcomeTitle": "Welcome to Guardian Ai",
     "welcomeSubtitle": "Get started with our interactive tutorials",
     "learnBasics": "Learn the basics",
     "startChatCard": "Start chatting",
@@ -488,7 +491,7 @@
     "newChat": "New chat",
     "messages": "Messages",
     "generateImage": "Generate image",
-    "askPlaceholder": "Ask MonsterAI...",
+    "askPlaceholder": "Ask Guardian Ai...",
     "characters": "Characters"
   },
   "chat": {
@@ -516,7 +519,7 @@
     "selectCharacter": "Select Character",
     "noCharactersHint": "No characters yet. Create one on the Characters page.",
     "sayHello": "Say hello to {{name}}",
-    "startGeneral": "Start a conversation with Monster AI",
+    "startGeneral": "Start a conversation with Guardian Ai",
     "newConversation": "New conversation created",
     "copied": "Copied to clipboard",
     "messageDeleted": "Message deleted",

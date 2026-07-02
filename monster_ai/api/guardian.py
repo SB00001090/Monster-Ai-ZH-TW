@@ -34,6 +34,10 @@ class ErrorReportRequest(BaseModel):
     source: str = "api"
     account_id: str | None = None
     discord_notify: bool = False
+    jam_url: str | None = None
+    auto_fix_action: str | None = None
+    auto_fix_result: str | None = None
+    incident_id: int | None = None
 
 
 class OCProtectRequest(BaseModel):
@@ -205,7 +209,17 @@ async def report_error(body: ErrorReportRequest, request: Request) -> dict:
         source=body.source,
         account_id=body.account_id,
         discord_notify=body.discord_notify,
+        jam_url=body.jam_url,
+        auto_fix_action=body.auto_fix_action,
+        auto_fix_result=body.auto_fix_result,
+        incident_id=body.incident_id,
     )
+
+
+@router.get("/errors/recent")
+async def errors_recent(request: Request, limit: int = 20) -> dict:
+    svc = _guardian(request)
+    return {"cases": svc.errors.recent(limit)}
 
 
 @router.get("/errors/summary")

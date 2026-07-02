@@ -9,6 +9,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useGuest } from "@/contexts/GuestContext";
 import OAuthProviderButtons from "@/components/OAuthProviderButtons";
+import GuardianAccountPanel from "@/components/GuardianAccountPanel";
 import LLMSettings from "./LLMSettings";
 import { useLocation } from "wouter";
 
@@ -236,6 +237,7 @@ function AccountSection({ user, isGuest }: { user: any; isGuest: boolean }) {
             <Button className="w-full" variant="outline" onClick={() => setLocation("/login")}>
               前往登入頁
             </Button>
+            <GuardianAccountPanel />
           </div>
         ) : (
           <div className="space-y-4">
@@ -251,8 +253,10 @@ function AccountSection({ user, isGuest }: { user: any; isGuest: boolean }) {
               variant="secondary"
               onClick={() => setLocation("/guardian-sync")}
             >
-              🛡️ Monster Guardian 雲端同步
+              🛡️ Guardian Ai 雲端同步
             </Button>
+
+            <GuardianAccountPanel />
 
             <div className="grid grid-cols-2 gap-4">
               <div className="p-3 rounded-lg border">

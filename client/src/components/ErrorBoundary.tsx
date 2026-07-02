@@ -23,7 +23,7 @@ export default class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error("[Monster AI] UI error:", error, info);
+    console.error("[Guardian Ai] UI error:", error, info);
     void reportError(error, info.componentStack ?? "ErrorBoundary", "ui");
   }
 

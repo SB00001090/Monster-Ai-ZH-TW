@@ -460,6 +460,8 @@ class GuardianNetworkLearningSettings(BaseModel):
     max_topics_per_run: int = 3
     allow_anonymous_metrics: bool = False
     art_triage_enabled: bool = True
+    background_daemon: bool = True
+    daemon_interval_seconds: int = 1800
 
 
 class GuardianSettings(BaseModel):

@@ -151,7 +151,7 @@ export default function MobileImagePage({
   const handleDownloadImage = (imageUrl: string, prompt: string) => {
     const a = document.createElement("a");
     a.href = imageUrl;
-    a.download = `monsterai-${Date.now()}.png`;
+    a.download = `guardian-ai-${Date.now()}.png`;
     a.click();
     toast.success("Image downloaded");
   };
@@ -177,7 +177,7 @@ export default function MobileImagePage({
             </Button>
           )}
           <div>
-            <h1 className="font-bold text-base">MonsterAi Generate</h1>
+            <h1 className="font-bold text-base">Guardian Ai Generate</h1>
             <p className="text-xs text-muted-foreground">
               {images.length} images
             </p>

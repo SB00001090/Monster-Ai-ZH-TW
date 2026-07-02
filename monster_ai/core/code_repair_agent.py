@@ -1,20 +1,25 @@
 """LLM-powered automatic code repair."""
 from __future__ import annotations
 
+import json
 import logging
 import re
 import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 from monster_ai.config import RepairSettings
 from monster_ai.core.self_repair import SelfRepairEngine
 from monster_ai.core.snapshot_manager import SnapshotManager
 
+if TYPE_CHECKING:
+    from monster_ai.modules.guardian.error_learning import ErrorLearningStore
+
 logger = logging.getLogger(__name__)
 
-REPAIR_SYSTEM = """You fix Python code errors for Monster AI. Output ONLY a unified diff patch.
+REPAIR_SYSTEM = """You fix Python code errors for Guardian Ai. Output ONLY a unified diff patch.
 Format:
 ```diff
 --- a/path/to/file.py
@@ -44,6 +49,11 @@ class CodeRepairAgent:
         self.snapshots = SnapshotManager(repo_root)
         self.root = repo_root
         self._repairs_this_hour = 0
+        self._error_store: ErrorLearningStore | None = None
+
+    def bind_error_store(self, store: Any) -> None:
+        """Attach Guardian ErrorLearningStore for context-aware repairs (G3)."""
+        self._error_store = store
 
     def _allowed_path(self, path: Path) -> bool:
         rel = str(path).replace("\\", "/")
@@ -101,7 +111,15 @@ class CodeRepairAgent:
             return RepairResult(False, "repair circuit breaker open")
 
         branch = self.snapshots.create_repair_branch()
-        prompt = f"Fix this error:\n\n{error_text[:4000]}"
+        guardian_ctx = ""
+        if self._error_store is not None:
+            recent = self._error_store.recent(5)
+            if recent:
+                guardian_ctx = (
+                    "Recent Guardian error cases (fix_suggestion may help):\n"
+                    f"{json.dumps(recent, ensure_ascii=False)[:3000]}\n\n"
+                )
+        prompt = f"{guardian_ctx}Fix this error:\n\n{error_text[:4000]}"
         try:
             raw = await self.repair.generate(prompt, system=REPAIR_SYSTEM)
         except Exception as exc:  # noqa: BLE001

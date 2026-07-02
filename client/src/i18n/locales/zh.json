@@ -1,6 +1,6 @@
 {
   "common": {
-    "welcome": "歡迎使用 Monster AI",
+    "welcome": "歡迎使用 Guardian Ai",
     "or": "或",
     "loading": "載入中…",
     "back": "返回",
@@ -42,6 +42,9 @@
     "deploy": "部署連線",
     "guardianSync": "Guardian 同步",
     "networkLearning": "自主網絡學習",
+    "toddlerLearning": "幼兒教育式學習",
+    "characterLifecycle": "角色生命週期",
+    "pricing": "授權與定價",
     "integrations": "平台整合"
   },
   "analytics": {
@@ -166,7 +169,7 @@
   },
   "home": {
     "welcomeUser": "歡迎回來，{{name}}",
-    "welcomeGuest": "歡迎使用 Monster AI",
+    "welcomeGuest": "歡迎使用 Guardian Ai",
     "subtitle": "與角色聊天、生成圖片，全部在本機運行",
     "pythonBackend": "Python 後端",
     "online": "線上",
@@ -185,7 +188,7 @@
   },
   "community": {
     "community": "社群角色",
-    "communityDescription": "探索並複製 Monster AI 社群建立的角色",
+    "communityDescription": "探索並複製 Guardian Ai 社群建立的角色",
     "by": "作者",
     "communityMember": "社群成員",
     "chats": "次對話",
@@ -207,7 +210,7 @@
     "feedbackError": "提交回報失敗"
   },
   "tutorials": {
-    "welcome": "歡迎使用 Monster AI",
+    "welcome": "歡迎使用 Guardian Ai",
     "getStarted": "透過互動教學快速上手",
     "allCategories": "全部",
     "watchVideo": "觀看影片",
@@ -392,12 +395,12 @@
     "submit": "提交回報"
   },
   "mobileStats": {
-    "title": "MonsterAi 統計",
+    "title": "Guardian Ai 統計",
     "feedback": "回饋",
     "rating": "評分",
     "improvements": "改進",
     "optimizations": "優化",
-    "learning": "MonsterAi 正在從您的回饋中學習，更多互動有助於優化回應。",
+    "learning": "Guardian Ai 正在從您的回饋中學習，更多互動有助於優化回應。",
     "performanceSummary": "表現摘要",
     "totalInteractions": "互動總數",
     "qualityScore": "品質分數",
@@ -405,7 +408,7 @@
     "promptOptimizations": "提示詞優化",
     "insights": "洞察",
     "insightGood": "表現很好！請繼續提供回饋以進一步改進。",
-    "insightProgress": "進展良好！您的回饋正在幫助 MonsterAi 學習。",
+    "insightProgress": "進展良好！您的回饋正在幫助 Guardian Ai 學習。",
     "na": "無"
   },
   "admin": {
@@ -480,7 +483,7 @@
   },
   "security": {
     "center": "安全中心",
-    "monsterShield": "MonsterShield 保護等級",
+    "monsterShield": "Guardian Shield 保護等級",
     "crimeGuard": "CrimeGuard 犯罪防範",
     "deviceContact": "設備聯繫監控",
     "networkLock": "網絡鎖定",
@@ -495,7 +498,7 @@
     "anonymousReports": "匿名舉報記錄"
   },
   "chatPage": {
-    "welcomeTitle": "歡迎來到 MonsterAi",
+    "welcomeTitle": "歡迎來到 Guardian Ai",
     "welcomeSubtitle": "通過我們的互動教程開始使用",
     "learnBasics": "學習基礎知識",
     "startChatCard": "開始聊天",
@@ -504,7 +507,7 @@
     "newChat": "新聊天",
     "messages": "消息",
     "generateImage": "生成圖像",
-    "askPlaceholder": "問 MonsterAI...",
+    "askPlaceholder": "問 Guardian Ai...",
     "characters": "角色"
   },
   "chat": {
@@ -532,7 +535,7 @@
     "selectCharacter": "選擇角色",
     "noCharactersHint": "尚無角色，請至角色頁面建立。",
     "sayHello": "向 {{name}} 打個招呼",
-    "startGeneral": "開始與 Monster AI 對話",
+    "startGeneral": "開始與 Guardian Ai 對話",
     "newConversation": "已建立新對話",
     "copied": "已複製到剪貼簿",
     "messageDeleted": "訊息已刪除",

@@ -33,7 +33,7 @@ import { toast } from "sonner";
 import { Streamdown } from "streamdown";
 import { useTranslation } from "react-i18next";
 import { useTTS } from "@/hooks/useTTS";
-import { APP_LOGO_SRC } from "@/const";
+import { APP_LOGO_SRC, APP_NAME } from "@/const";
 import SignInPrompt from "@/components/SignInPrompt";
 
 
@@ -200,7 +200,7 @@ export default function ChatPage() {
       }
       try {
         const conv = await createConversationMutation.mutateAsync({
-          title: "Monster AI Chat",
+          title: "Guardian Ai Chat",
           mode: "chat",
         });
         setConversationId(conv.id);
@@ -281,8 +281,8 @@ export default function ChatPage() {
         onClick={resetToWelcome}
         className="flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-primary-foreground font-semibold hover:opacity-90 transition-opacity"
       >
-        <img src={APP_LOGO_SRC} alt="MonsterAi" className="w-6 h-6 rounded-md object-cover" />
-        MonsterAi
+        <img src={APP_LOGO_SRC} alt={APP_NAME} className="w-6 h-6 rounded-md object-cover" />
+        {APP_NAME}
       </button>
       <div className="flex items-center gap-2">
         <Button
@@ -426,7 +426,7 @@ export default function ChatPage() {
     <div className="flex-1 flex flex-col items-center justify-center p-8 overflow-auto">
       <img
         src={APP_LOGO_SRC}
-        alt="MonsterAi"
+        alt={APP_NAME}
         className="w-24 h-24 rounded-2xl mb-6 shadow-lg shadow-primary/20 object-cover"
       />
       <h1 className="text-4xl font-bold text-foreground mb-3 text-center">

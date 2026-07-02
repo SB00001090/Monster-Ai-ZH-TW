@@ -93,7 +93,7 @@ export default function ISPRestrictionPage() {
                 <CheckCircle className="h-6 w-6 text-green-500" />
                 <CardTitle>無限訪問</CardTitle>
               </div>
-              <CardDescription>您可以無限使用 MonsterAi</CardDescription>
+              <CardDescription>您可以無限使用 Guardian Ai</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <Alert className="bg-green-50 border-green-200">
@@ -116,7 +116,7 @@ export default function ISPRestrictionPage() {
 
               <div className="bg-green-50 p-4 rounded-lg text-sm text-green-800">
                 <p className="font-semibold mb-2">✨ 特殊優惠</p>
-                <p>作為 SmarTone 用戶，您可以享受 MonsterAi 的所有高級功能，無需任何限制！</p>
+                <p>作為 SmarTone 用戶，您可以享受 Guardian Ai 的所有高級功能，無需任何限制！</p>
               </div>
             </CardContent>
           </Card>

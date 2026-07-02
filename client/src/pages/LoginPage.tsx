@@ -43,7 +43,7 @@ export default function LoginPage() {
           <div className="flex justify-center mb-4">
             <img
               src={APP_LOGO_SRC}
-              alt="MonsterAi"
+              alt="Guardian Ai"
               className="w-20 h-20 rounded-2xl object-cover shadow-lg shadow-violet-500/20"
             />
           </div>

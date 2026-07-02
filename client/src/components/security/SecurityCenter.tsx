@@ -74,7 +74,7 @@ export default function SecurityCenter({
             安全中心
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            MonsterShield · CrimeGuard 即時狀態
+            Guardian Shield · CrimeGuard 即時狀態
           </p>
         </div>
         <Button variant="outline" size="sm" className="rounded-full" onClick={onBack}>
@@ -97,7 +97,7 @@ export default function SecurityCenter({
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <StatusCard
-          title="MonsterShield"
+          title="Guardian Shield"
           icon={Shield}
           status={ml?.green_dot ? "保護中" : "待機"}
           statusColor={ml?.green_dot ? "text-emerald-400" : "text-amber-400"}
@@ -185,7 +185,7 @@ export default function SecurityCenter({
 
       <Tabs defaultValue="crimeguard">
         <TabsList className="rounded-xl">
-          <TabsTrigger value="monsterlock">MonsterLock</TabsTrigger>
+          <TabsTrigger value="monsterlock">Guardian Lock</TabsTrigger>
           <TabsTrigger value="crimeguard">CrimeGuard</TabsTrigger>
         </TabsList>
         {(["monsterlock", "crimeguard"] as const).map((key) => {

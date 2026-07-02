@@ -97,7 +97,7 @@ export default function CharacterCommunityPage() {
                   <h3 className="text-xl font-bold mb-1 truncate">{character.name}</h3>
                   <p className="text-sm text-muted-foreground mb-2">
                     {t("community.by")}{" "}
-                    {character.userId === 1 ? "MonsterAi" : t("community.communityMember")}
+                    {character.userId === 1 ? "Guardian Ai" : t("community.communityMember")}
                   </p>
                   <p className="text-sm line-clamp-2">{character.description}</p>
                 </div>

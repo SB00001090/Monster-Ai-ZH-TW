@@ -28,11 +28,13 @@ import IntegrationsPage from "./pages/IntegrationsPage";
 import GuardianSyncPage from "./pages/GuardianSyncPage";
 import NetworkLearningPanel from "./pages/NetworkLearningPanel";
 import ToddlerLearningPanel from "./pages/ToddlerLearningPanel";
+import GuardianCharacterHubPage from "./pages/GuardianCharacterHubPage";
+import CommercialPage from "./pages/CommercialPage";
 import { BackendProvider } from "./contexts/BackendContext";
 
 import LoadingScreen from "./components/LoadingScreen";
 import { AgeVerification } from "./components/AgeVerification";
-import { Route, Switch } from "wouter";
+import { Redirect, Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { GuestProvider } from "./contexts/GuestContext";
@@ -175,20 +177,51 @@ function Router() {
           <IntegrationsPage />
         </DashboardLayout>
       </Route>
+      <Route path="/guardian">
+        <Redirect to="/guardian-sync" />
+      </Route>
+      <Route path="/guardian/sync">
+        <Redirect to="/guardian-sync" />
+      </Route>
       <Route path="/guardian-sync">
         <DashboardLayout>
           <GuardianSyncPage />
         </DashboardLayout>
+      </Route>
+      <Route path="/learning/network">
+        <Redirect to="/network-learning" />
       </Route>
       <Route path="/network-learning">
         <DashboardLayout>
           <NetworkLearningPanel />
         </DashboardLayout>
       </Route>
+      <Route path="/toddler">
+        <Redirect to="/toddler-learning" />
+      </Route>
+      <Route path="/learning/toddler">
+        <Redirect to="/toddler-learning" />
+      </Route>
       <Route path="/toddler-learning">
         <DashboardLayout>
           <ToddlerLearningPanel />
         </DashboardLayout>
+      </Route>
+      <Route path="/guardian-characters">
+        <DashboardLayout>
+          <GuardianCharacterHubPage />
+        </DashboardLayout>
+      </Route>
+      <Route path="/character-diary">
+        <Redirect to="/guardian-characters" />
+      </Route>
+      <Route path="/pricing">
+        <DashboardLayout>
+          <CommercialPage />
+        </DashboardLayout>
+      </Route>
+      <Route path="/commercial">
+        <Redirect to="/pricing" />
       </Route>
 
       <Route path="/home">

@@ -1,7 +1,7 @@
 {
-  "name": "MonsterGuardian_NetworkLearning",
+  "name": "GuardianAi_NetworkLearning",
   "description": "Opt-in autonomous network learning — consent gate, Grok approval, art triage, privacy-first",
-  "developer": "Suckbob | Monster Guardian AI",
+  "developer": "Suckbob | Guardian Ai",
   "variables": {
     "MONSTER_TUNNEL_URL": "https://xxx.trycloudflare.com",
     "FORCE_RUN": "false",
