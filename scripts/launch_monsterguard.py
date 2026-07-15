@@ -188,11 +188,15 @@ def main() -> int:
     lock.write_text(str(os.getpid()), encoding="utf-8")
 
     os.environ["MONSTER_DISCORD_TOKEN"] = token
+    # Local launch = user consents to link MonsterGuard ↔ Monster AI on this machine
+    if not os.environ.get("MONSTER_AI_CONNECT_CONSENT", "").strip():
+        os.environ["MONSTER_AI_CONNECT_CONSENT"] = "1"
     os.chdir(ROOT)
 
     print("Starting Monster AI + MonsterGuard...")
     print(f"Root: {ROOT}")
     print(f"URL:  http://127.0.0.1:{port}")
+    print(f"Monster AI link: consent={os.environ.get('MONSTER_AI_CONNECT_CONSENT')}")
     print("Stop with Ctrl+C (do NOT close by clicking X if you want to keep running)\n")
 
     try:

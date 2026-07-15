@@ -1,11 +1,16 @@
 """Discord learning feedback — autonomous evolution loop."""
 from __future__ import annotations
 
+import logging
+
 import discord
 from discord import app_commands
 from discord.ext import commands
 
+from monster_ai.modules.discord.guard.interaction_utils import safe_defer, safe_followup
 from monster_ai.modules.discord.guard.ui.embeds import neon_footer
+
+logger = logging.getLogger(__name__)
 
 
 class LearningCog(commands.Cog):
@@ -29,17 +34,18 @@ class LearningCog(commands.Cog):
         comment: str = "",
         last_message: str = "",
     ) -> None:
+        if not await safe_defer(interaction):
+            return
         engine = self._learning()
         if engine is None or not engine.settings.enabled:
-            await interaction.response.send_message("學習模組未啟用。", ephemeral=True)
+            await safe_followup(interaction, "學習模組未啟用。")
             return
         norm = thumbs.strip().lower()
         if norm not in {"up", "down"}:
-            await interaction.response.send_message("thumbs 請填 up 或 down。", ephemeral=True)
+            await safe_followup(interaction, "thumbs 請填 up 或 down。")
             return
 
         user_id = f"discord:{interaction.user.id}"
-        await interaction.response.defer(ephemeral=True)
         try:
             if norm == "down" and last_message.strip():
                 result = await engine.record_feedback_and_regenerate(
@@ -59,7 +65,7 @@ class LearningCog(commands.Cog):
                         color=0x39FF14,
                     )
                     embed.set_footer(text=neon_footer() + " · 自主學習")
-                    await interaction.followup.send(embed=embed, ephemeral=True)
+                    await safe_followup(interaction, embed=embed)
                     return
             result = engine.record_feedback(
                 user_id=user_id,
@@ -68,12 +74,12 @@ class LearningCog(commands.Cog):
                 comment=comment,
                 message=last_message,
             )
-            await interaction.followup.send(
+            await safe_followup(
+                interaction,
                 "已記錄回饋，Monster AI 會在後續對話中持續進化。" if result.get("ok") else "回饋失敗。",
-                ephemeral=True,
             )
         except Exception as exc:  # noqa: BLE001
-            await interaction.followup.send(f"回饋失敗: {exc}", ephemeral=True)
+            await safe_followup(interaction, f"回饋失敗: {exc}")
 
     @app_commands.command(name="learn", description="連接網絡學習知識並存入 Monster AI 知識庫")
     @app_commands.describe(query="要學習的主題或問題", refresh="強制重新搜尋（忽略快取）")
@@ -83,18 +89,16 @@ class LearningCog(commands.Cog):
         query: str,
         refresh: bool = False,
     ) -> None:
+        if not await safe_defer(interaction, thinking=True):
+            return
         engine = self._learning()
         if engine is None or not engine.settings.web_learning_enabled:
-            await interaction.response.send_message("網絡學習未啟用。", ephemeral=True)
+            await safe_followup(interaction, "網絡學習未啟用。")
             return
-        await interaction.response.defer(thinking=True)
         try:
             result = await engine.learn_from_web(query, force_refresh=refresh)
             if not result.get("ok"):
-                await interaction.followup.send(
-                    f"學習失敗：{result.get('reason', 'unknown')}",
-                    ephemeral=True,
-                )
+                await safe_followup(interaction, f"學習失敗：{result.get('reason', 'unknown')}")
                 return
             summary = str(result.get("summary", "")).strip()
             desc = (
@@ -107,9 +111,9 @@ class LearningCog(commands.Cog):
                 desc += f"\n\n{summary[:1500]}"
             embed = discord.Embed(title="網絡知識已學習", description=desc, color=0x00F5FF)
             embed.set_footer(text=neon_footer() + " · 網絡學習")
-            await interaction.followup.send(embed=embed)
+            await safe_followup(interaction, embed=embed)
         except Exception as exc:  # noqa: BLE001
-            await interaction.followup.send(f"學習失敗: {exc}", ephemeral=True)
+            await safe_followup(interaction, f"學習失敗: {exc}")
 
     @app_commands.command(name="ailearn", description="啟動網絡自主學習（AI / 語言 / 資安）")
     @app_commands.describe(
@@ -124,12 +128,44 @@ class LearningCog(commands.Cog):
         resume: bool = True,
         extended: bool = False,
     ) -> None:
+        # MUST be first — event loop may be busy with Ollama/curriculum
+        if not await safe_defer(interaction, thinking=True):
+            return
+
         engine = self._learning()
         if engine is None or not engine.settings.curriculum_enabled:
-            await interaction.response.send_message("36h 課程未啟用。", ephemeral=True)
+            await safe_followup(
+                interaction,
+                "36h 課程未啟用。請在 `config.yaml` 設 `learning.curriculum_enabled: true` 並重啟。",
+            )
             return
-        await interaction.response.defer(ephemeral=True)
+
         try:
+            # Already running? Report progress instead of hanging
+            try:
+                cur = engine.curriculum_status()
+            except Exception:  # noqa: BLE001
+                cur = {}
+            if cur.get("running"):
+                embed = discord.Embed(
+                    title="🧠 自主學習已在進行中",
+                    description=(
+                        f"**模式：** `{cur.get('mode') or 'base'}`\n"
+                        f"**進度：** {cur.get('progress_pct', 0)}% "
+                        f"({cur.get('completed_topics', 0)}/{cur.get('total_topics', 0)})\n"
+                        f"**階段：** `{cur.get('current_phase') or '—'}`\n"
+                        f"**主題：** `{cur.get('current_topic_id') or '—'}`\n"
+                        f"**訓練對：** {cur.get('pairs_on_disk', 0)}\n"
+                        f"**剩餘約：** {cur.get('eta_hours', '—')}h\n\n"
+                        "查看進度：`/aistatus`\n"
+                        "無需重複啟動；若要改模式請先等本輪結束或重啟服務。"
+                    ),
+                    color=0x00F5FF,
+                )
+                embed.set_footer(text=neon_footer() + " · 課程進行中")
+                await safe_followup(interaction, embed=embed)
+                return
+
             mode = "extended" if extended else "base"
             result = await engine.start_curriculum(
                 duration_hours=hours,
@@ -137,47 +173,66 @@ class LearningCog(commands.Cog):
                 mode=mode,
             )
             if not result.get("ok"):
-                await interaction.followup.send(
-                    f"啟動失敗：{result.get('reason', 'unknown')}",
-                    ephemeral=True,
-                )
+                reason = result.get("reason", "unknown")
+                if reason == "already_running":
+                    st = result.get("status") or engine.curriculum_status()
+                    await safe_followup(
+                        interaction,
+                        f"課程已在運行中（進度 {st.get('progress_pct', 0)}%）。用 `/aistatus` 查看。",
+                    )
+                    return
+                await safe_followup(interaction, f"啟動失敗：`{reason}`")
                 return
-            st = result.get("status", {})
-            await interaction.followup.send(
-                f"已啟動 **{st.get('duration_hours', hours or 36)}h** "
-                f"{'完整' if extended else 'AI'} 網絡自主學習！\n"
-                f"主題：{st.get('total_topics', 72)} 個 · "
-                f"進度：{st.get('completed_topics', 0)}\n"
-                f"訓練輸出：`data/training/curriculum/monster_ai_train.jsonl`\n"
-                f"也可用：`python scripts/run_36h_ai_curriculum.py`",
-                ephemeral=True,
+
+            st = result.get("status") or {}
+            label = "完整（AI+語言+資安）" if extended else "AI 36h"
+            embed = discord.Embed(
+                title="🚀 已啟動網絡自主學習",
+                description=(
+                    f"**時長：** **{st.get('duration_hours', hours or 36)}h** · {label}\n"
+                    f"**主題數：** {st.get('total_topics', 72)}\n"
+                    f"**目前進度：** {st.get('completed_topics', 0)}\n"
+                    f"**模式：** `{mode}` · resume=`{resume}`\n\n"
+                    f"訓練輸出：`data/training/curriculum/monster_ai_train.jsonl`\n"
+                    f"進度查詢：`/aistatus`"
+                ),
+                color=0x39FF14,
             )
+            embed.set_footer(text=neon_footer() + " · /ailearn")
+            await safe_followup(interaction, embed=embed)
         except Exception as exc:  # noqa: BLE001
-            await interaction.followup.send(f"啟動失敗: {exc}", ephemeral=True)
+            logger.exception("ailearn failed: %s", exc)
+            await safe_followup(interaction, f"啟動失敗: {exc}")
 
     @app_commands.command(name="aistatus", description="查看 36h AI 學習進度")
     async def aistatus_cmd(self, interaction: discord.Interaction) -> None:
+        if not await safe_defer(interaction):
+            return
         engine = self._learning()
         if engine is None:
-            await interaction.response.send_message("學習模組未連接。", ephemeral=True)
+            await safe_followup(interaction, "學習模組未連接。")
             return
-        st = engine.curriculum_status()
-        embed = discord.Embed(
-            title="Monster AI 36h 學習進度",
-            description=(
-                f"**狀態：** {'進行中' if st.get('running') else '已停止'}\n"
-                f"**進度：** {st.get('progress_pct', 0)}% "
-                f"({st.get('completed_topics', 0)}/{st.get('total_topics', 0)})\n"
-                f"**訓練對：** {st.get('pairs_on_disk', 0)}\n"
-                f"**階段：** {st.get('current_phase') or '—'}\n"
-                f"**主題：** {st.get('current_topic_id') or '—'}\n"
-                f"**已用：** {st.get('elapsed_hours', 0)}h · "
-                f"**剩餘：** {st.get('eta_hours', 0)}h"
-            ),
-            color=0x00F5FF,
-        )
-        embed.set_footer(text=neon_footer())
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        try:
+            st = engine.curriculum_status()
+            embed = discord.Embed(
+                title="Monster AI 學習進度",
+                description=(
+                    f"**狀態：** {'進行中' if st.get('running') else '已停止'}\n"
+                    f"**進度：** {st.get('progress_pct', 0)}% "
+                    f"({st.get('completed_topics', 0)}/{st.get('total_topics', 0)})\n"
+                    f"**訓練對：** {st.get('pairs_on_disk', 0)}\n"
+                    f"**階段：** {st.get('current_phase') or '—'}\n"
+                    f"**主題：** {st.get('current_topic_id') or '—'}\n"
+                    f"**模式：** `{st.get('mode') or '—'}`\n"
+                    f"**已用：** {st.get('elapsed_hours', 0)}h · "
+                    f"**剩餘：** {st.get('eta_hours', 0)}h"
+                ),
+                color=0x00F5FF,
+            )
+            embed.set_footer(text=neon_footer())
+            await safe_followup(interaction, embed=embed)
+        except Exception as exc:  # noqa: BLE001
+            await safe_followup(interaction, f"讀取進度失敗: {exc}")
 
     @app_commands.command(name="rolelearn", description="角色扮演：連接網絡學習世界觀並寫入角色知識庫")
     @app_commands.describe(
@@ -192,12 +247,12 @@ class LearningCog(commands.Cog):
         character_id: str | None = None,
         refresh: bool = False,
     ) -> None:
-        bot = self.bot
-        roleplay_svc = getattr(bot, "roleplay", None)
-        if roleplay_svc is None:
-            await interaction.response.send_message("Roleplay 未連接。", ephemeral=True)
+        if not await safe_defer(interaction, thinking=True):
             return
-        await interaction.response.defer(thinking=True)
+        roleplay_svc = getattr(self.bot, "roleplay", None)
+        if roleplay_svc is None:
+            await safe_followup(interaction, "Roleplay 未連接。")
+            return
         try:
             sessions = roleplay_svc.list_sessions()
             session_id = str(sessions[0]["id"]) if sessions else None
@@ -208,10 +263,7 @@ class LearningCog(commands.Cog):
                 force_refresh=refresh,
             )
             if not result.get("ok"):
-                await interaction.followup.send(
-                    f"學習失敗：{result.get('reason', 'unknown')}",
-                    ephemeral=True,
-                )
+                await safe_followup(interaction, f"學習失敗：{result.get('reason', 'unknown')}")
                 return
             facts = result.get("lore_facts") or []
             desc = (
@@ -223,24 +275,22 @@ class LearningCog(commands.Cog):
                 desc += "\n\n" + "\n".join(f"• {f[:200]}" for f in facts[:4])
             embed = discord.Embed(title="角色世界觀已學習", description=desc[:1900], color=0xA78BFA)
             embed.set_footer(text=neon_footer() + " · 角色網絡學習")
-            await interaction.followup.send(embed=embed)
+            await safe_followup(interaction, embed=embed)
         except Exception as exc:  # noqa: BLE001
-            await interaction.followup.send(f"學習失敗: {exc}", ephemeral=True)
+            await safe_followup(interaction, f"學習失敗: {exc}")
 
     @app_commands.command(name="imagelearn", description="從歷史出圖品質學習完美圖片生成技巧")
     async def imagelearn_cmd(self, interaction: discord.Interaction) -> None:
+        if not await safe_defer(interaction, thinking=True):
+            return
         engine = self._learning()
         if engine is None or not engine.image or not engine.image.enabled:
-            await interaction.response.send_message("圖像學習未啟用。", ephemeral=True)
+            await safe_followup(interaction, "圖像學習未啟用。")
             return
-        await interaction.response.defer(thinking=True)
         try:
             result = await engine.learn_perfect_images()
             if not result.get("ok"):
-                await interaction.followup.send(
-                    f"圖像學習失敗：{result.get('reason', 'unknown')}",
-                    ephemeral=True,
-                )
+                await safe_followup(interaction, f"圖像學習失敗：{result.get('reason', 'unknown')}")
                 return
             tags = ", ".join(result.get("learned_tags") or []) or "（預設品質標籤）"
             embed = discord.Embed(
@@ -255,40 +305,45 @@ class LearningCog(commands.Cog):
                 color=0xFF00FF,
             )
             embed.set_footer(text=neon_footer() + " · 圖像學習")
-            await interaction.followup.send(embed=embed)
+            await safe_followup(interaction, embed=embed)
         except Exception as exc:  # noqa: BLE001
-            await interaction.followup.send(f"圖像學習失敗: {exc}", ephemeral=True)
+            await safe_followup(interaction, f"圖像學習失敗: {exc}")
 
     @app_commands.command(name="evolve", description="查看 Monster AI 自主學習與進化狀態")
     async def evolve_cmd(self, interaction: discord.Interaction) -> None:
+        if not await safe_defer(interaction):
+            return
         engine = self._learning()
         if engine is None:
-            await interaction.response.send_message("學習模組未連接。", ephemeral=True)
+            await safe_followup(interaction, "學習模組未連接。")
             return
-        snap = engine.evolution_snapshot()
-        failures = snap.get("quality_failures", {})
-        top = failures.get("top_reasons") or []
-        reasons = ", ".join(f"{r['reason']}({r['count']})" for r in top[:3]) or "無"
-        embed = discord.Embed(
-            title="Monster AI 進化狀態",
-            description=(
-                f"**回饋事件：** {snap.get('feedback_events', 0)}\n"
-                f"**品質失敗：** {failures.get('failure_count', 0)}\n"
-                f"**常見失敗原因：** {reasons}\n"
-                f"**品質門檻：** {snap.get('min_quality_score')} "
-                f"(設定 {snap.get('configured_min_quality')})\n"
-                f"**Reflect：** {'開' if snap.get('reflect_enabled') else '關'}\n"
-                f"**上下文注入：** {'開' if snap.get('inject_context_always') else '關'}\n"
-                f"**網絡知識：** {snap.get('web', {}).get('total_facts', 0)} 條 "
-                f"({snap.get('web', {}).get('topics_learned', 0)} 主題)\n"
-                f"**圖像學習：** 優 {snap.get('image', {}).get('good_count', 0)} / "
-                f"劣 {snap.get('image', {}).get('bad_count', 0)} · "
-                f"訓練樣本 {snap.get('image', {}).get('training_samples', 0)}"
-            ),
-            color=0x9D4EDD,
-        )
-        embed.set_footer(text=neon_footer())
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        try:
+            snap = engine.evolution_snapshot()
+            failures = snap.get("quality_failures", {})
+            top = failures.get("top_reasons") or []
+            reasons = ", ".join(f"{r['reason']}({r['count']})" for r in top[:3]) or "無"
+            embed = discord.Embed(
+                title="Monster AI 進化狀態",
+                description=(
+                    f"**回饋事件：** {snap.get('feedback_events', 0)}\n"
+                    f"**品質失敗：** {failures.get('failure_count', 0)}\n"
+                    f"**常見失敗原因：** {reasons}\n"
+                    f"**品質門檻：** {snap.get('min_quality_score')} "
+                    f"(設定 {snap.get('configured_min_quality')})\n"
+                    f"**Reflect：** {'開' if snap.get('reflect_enabled') else '關'}\n"
+                    f"**上下文注入：** {'開' if snap.get('inject_context_always') else '關'}\n"
+                    f"**網絡知識：** {snap.get('web', {}).get('total_facts', 0)} 條 "
+                    f"({snap.get('web', {}).get('topics_learned', 0)} 主題)\n"
+                    f"**圖像學習：** 優 {snap.get('image', {}).get('good_count', 0)} / "
+                    f"劣 {snap.get('image', {}).get('bad_count', 0)} · "
+                    f"訓練樣本 {snap.get('image', {}).get('training_samples', 0)}"
+                ),
+                color=0x9D4EDD,
+            )
+            embed.set_footer(text=neon_footer())
+            await safe_followup(interaction, embed=embed)
+        except Exception as exc:  # noqa: BLE001
+            await safe_followup(interaction, f"讀取失敗: {exc}")
 
 
 async def setup(bot: discord.Client) -> None:

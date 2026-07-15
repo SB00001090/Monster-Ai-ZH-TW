@@ -56,10 +56,6 @@ export function useAuth(options?: UseAuthOptions) {
         isGuestMode: true,
       };
     }
-    localStorage.setItem(
-      "monster-user-info",
-      JSON.stringify(meQuery.data)
-    );
     return {
       user: meQuery.data ?? null,
       loading: meQuery.isLoading || logoutMutation.isPending,
@@ -75,6 +71,19 @@ export function useAuth(options?: UseAuthOptions) {
     logoutMutation.isPending,
     isGuest,
   ]);
+
+  // Persist user only when we have real data (avoid useMemo side effects / "undefined" string)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (isGuest) return;
+    if (meQuery.data) {
+      localStorage.setItem("monster-user-info", JSON.stringify(meQuery.data));
+      return;
+    }
+    if (!meQuery.isLoading) {
+      localStorage.removeItem("monster-user-info");
+    }
+  }, [isGuest, meQuery.data, meQuery.isLoading]);
 
   useEffect(() => {
     if (!redirectOnUnauthenticated) return;

@@ -4,7 +4,8 @@ from __future__ import annotations
 import discord
 from discord import app_commands
 
-from monster_ai.modules.discord.guard.integration.intro_generator import INTRO_STYLES, generate_intro
+from monster_ai.modules.discord.guard.integration.intro_generator import generate_intro
+from monster_ai.modules.discord.guard.interaction_utils import safe_defer, safe_followup
 from monster_ai.modules.discord.guard.ui.embeds import intro_embed, neon_footer
 
 _STYLE_CHOICES = [
@@ -19,40 +20,44 @@ async def _run_intro(
     style: str,
     *,
     member_name: str | None = None,
-    public: bool = False,
+    public: bool = True,
 ) -> None:
-    await interaction.response.defer(thinking=True, ephemeral=not public)
+    if not await safe_defer(interaction, thinking=True, ephemeral=not public):
+        return
     bot = interaction.client
-    text, color = await generate_intro(
-        bot,  # type: ignore[arg-type]
-        style=style,
-        member_name=member_name or interaction.user.display_name,
-    )
-    embed = intro_embed(text, style=style, color=color)
-    await interaction.followup.send(embed=embed, ephemeral=not public)
+    try:
+        text, color = await generate_intro(
+            bot,  # type: ignore[arg-type]
+            style=style,
+            member_name=member_name or interaction.user.display_name,
+        )
+        embed = intro_embed(text, style=style, color=color)
+        await safe_followup(interaction, embed=embed, ephemeral=not public)
+    except Exception as exc:  # noqa: BLE001
+        await safe_followup(interaction, f"自我介紹失敗: {exc}", ephemeral=not public)
 
 
 @app_commands.command(name="intro", description="Monster AI 動態自我介紹（可選風格）")
 @app_commands.describe(
     style="介紹風格",
-    public="是否公開到頻道（預設僅自己可見）",
+    public="是否公開到頻道（預設公開）",
 )
 @app_commands.choices(style=_STYLE_CHOICES)
 async def intro_cmd(
     interaction: discord.Interaction,
     style: app_commands.Choice[str] | None = None,
-    public: bool = False,
+    public: bool = True,
 ) -> None:
     await _run_intro(interaction, style.value if style else "guardian", public=public)
 
 
 @app_commands.command(name="monsterai", description="Monster AI 自我介紹（與 /intro 相同）")
-@app_commands.describe(style="介紹風格", public="是否公開到頻道")
+@app_commands.describe(style="介紹風格", public="是否公開到頻道（預設公開）")
 @app_commands.choices(style=_STYLE_CHOICES)
 async def monsterai_cmd(
     interaction: discord.Interaction,
     style: app_commands.Choice[str] | None = None,
-    public: bool = False,
+    public: bool = True,
 ) -> None:
     await _run_intro(interaction, style.value if style else "cyberpunk", public=public)
 
@@ -83,5 +88,8 @@ async def send_welcome_intro(
 
 
 async def setup(bot: discord.Client) -> None:
-    bot.tree.add_command(intro_cmd)
-    bot.tree.add_command(monsterai_cmd)
+    for cmd in (intro_cmd, monsterai_cmd):
+        try:
+            bot.tree.add_command(cmd, override=True)
+        except Exception:  # noqa: BLE001
+            pass

@@ -2,15 +2,17 @@
 from __future__ import annotations
 
 import discord
-from discord import app_commands
 
 from monster_ai.modules.discord.guard.cogs.guard_group import guard_group
+from monster_ai.modules.discord.guard.interaction_utils import safe_defer, safe_followup
 
 
 @guard_group.command(name="education", description="發送 DM 防詐騙教育指南到此頻道")
 async def guard_education(interaction: discord.Interaction) -> None:
+    if not await safe_defer(interaction):
+        return
     if not interaction.user.guild_permissions.manage_messages:
-        await interaction.response.send_message("需要「管理訊息」權限。", ephemeral=True)
+        await safe_followup(interaction, "需要「管理訊息」權限。")
         return
     from monster_ai.modules.discord.guard.capabilities import INTERCEPT_CATEGORIES
 
@@ -33,7 +35,7 @@ async def guard_education(interaction: discord.Interaction) -> None:
         color=0x5865F2,
     )
     embed.set_footer(text="MonsterGuard · Monster AI")
-    await interaction.response.send_message(embed=embed)
+    await safe_followup(interaction, embed=embed)
 
 
 async def setup(bot: discord.Client) -> None:

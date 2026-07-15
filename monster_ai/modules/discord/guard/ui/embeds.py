@@ -14,6 +14,51 @@ def _yn(val: bool) -> str:
     return "是" if val else "否"
 
 
+_TODDLER_STAGE_ZH = {
+    "infant": "嬰兒期",
+    "toddler": "幼兒期",
+    "preschool": "學前",
+    "school": "就學期",
+}
+
+_CONN_POLICY_ZH = {
+    "tunnel_or_usb_only": "僅 Tunnel / USB（無 Tailscale）",
+}
+
+
+def _guardian_field_value(g: dict[str, Any]) -> str:
+    """Human-readable Guardian Ai block for /status embeds."""
+    if not g:
+        return "狀態：`無法讀取`（請確認 :7860 `/api/guardian/status`）"
+
+    toddler = g.get("toddler_learning") or {}
+    stage_raw = str(toddler.get("stage") or "—")
+    stage = _TODDLER_STAGE_ZH.get(stage_raw, stage_raw)
+    next_hint = toddler.get("next_stage") or "—"
+
+    curr = g.get("curriculum") or {}
+    phase = curr.get("current_phase") or "—"
+    topic = curr.get("current_topic_id") or "—"
+    progress = curr.get("progress_pct")
+    progress_txt = f"{progress}%" if progress is not None else "—"
+
+    policy_raw = str(g.get("connection_policy") or "tunnel_or_usb_only")
+    policy = _CONN_POLICY_ZH.get(policy_raw, policy_raw)
+    mode = g.get("connection_mode") or "—"
+
+    healthy = g.get("healthy")
+    health_txt = "健康" if healthy is True else ("異常" if healthy is False else "—")
+
+    return (
+        f"啟用：`{_yn(bool(g.get('enabled')))}` · {health_txt}\n"
+        f"成長階段：`{stage}`\n"
+        f"下一階段：`{next_hint}`\n"
+        f"課程：`{phase}` · `{topic}` · {progress_txt}\n"
+        f"遠端政策：`{policy}`\n"
+        f"模式：`{mode}`"
+    )
+
+
 def neon_footer(frame_idx: int = 0) -> str:
     pulse = _ANIM_FRAMES[frame_idx % len(_ANIM_FRAMES)]
     return f"{pulse} {PRODUCT_NAME} v{VERSION} · {DEVELOPER_CREDIT}"
@@ -60,14 +105,9 @@ def status_embed(
         inline=True,
     )
 
-    g = guardian or {}
     embed.add_field(
         name="Guardian Ai",
-        value=(
-            f"啟用：`{_yn(bool(g.get('enabled', True)))}`\n"
-            f"階段：`{(g.get('toddler_learning') or {}).get('stage', '—')}`\n"
-            f"連線：`{g.get('connection_policy', 'tunnel_or_usb_only')}`"
-        ),
+        value=_guardian_field_value(guardian or {}),
         inline=True,
     )
 
@@ -91,7 +131,8 @@ def about_embed() -> discord.Embed:
             "• 防斷線自修復（10 次重試 + 心跳）\n"
             "• 監控指令（`/status`、`/guard restart`）\n"
             "• Monster AI 動態自我介紹（`/intro`、`/monsterai`）\n"
-            "• 新成員歡迎與個性化介紹\n\n"
+            "• 新成員歡迎與個性化介紹\n"
+            "• **自動教程**（加入伺服器 / 設定後 / `/guard tutorial`）\n\n"
             "🔒 本地優先 · 零信任 · 連線 Monster AI 需用戶同意"
         ),
         color=NEON_COLORS["cyan"],

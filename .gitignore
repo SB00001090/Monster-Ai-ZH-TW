@@ -101,6 +101,8 @@ apps/monstercallguard-android/local.properties
 apps/monstercallguard-android/.gradle/
 apps/monstercallguard-android/**/build/
 apps/monstercallguard-android/keystore/
+apps/guardian-ai-android/keystore/
+apps/guardian-ai-android/local.properties
 
 # OS
 .DS_Store

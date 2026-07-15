@@ -27,6 +27,7 @@ import DeployPage from "./pages/DeployPage";
 import IntegrationsPage from "./pages/IntegrationsPage";
 import GuardianSyncPage from "./pages/GuardianSyncPage";
 import NetworkLearningPanel from "./pages/NetworkLearningPanel";
+import CurriculumProgressPanel from "./pages/CurriculumProgressPanel";
 import ToddlerLearningPanel from "./pages/ToddlerLearningPanel";
 import GuardianCharacterHubPage from "./pages/GuardianCharacterHubPage";
 import CommercialPage from "./pages/CommercialPage";
@@ -205,6 +206,14 @@ function Router() {
       <Route path="/toddler-learning">
         <DashboardLayout>
           <ToddlerLearningPanel />
+        </DashboardLayout>
+      </Route>
+      <Route path="/curriculum">
+        <Redirect to="/guardian-curriculum" />
+      </Route>
+      <Route path="/guardian-curriculum">
+        <DashboardLayout>
+          <CurriculumProgressPanel />
         </DashboardLayout>
       </Route>
       <Route path="/guardian-characters">

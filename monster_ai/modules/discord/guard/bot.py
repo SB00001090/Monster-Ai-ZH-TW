@@ -62,19 +62,30 @@ class MonsterGuardBot(commands.Bot):
         )
         self.actions = ActionEngine(self.privacy_log)
         self._stats: dict[str, int] = {"scanned": 0, "blocked": 0, "warned": 0}
-        self._guild_cmds_cleared = False
+        self._slash_synced = False
 
     async def setup_hook(self) -> None:
         await self.guild_store.init()
         from monster_ai.modules.discord.guard.cogs.guard_group import guard_group
 
-        self.tree.add_command(guard_group)
+        self._safe_add_command(guard_group)
         await self._load_cogs()
+        # Global sync only here — do NOT empty-sync guilds (causes client "command expired")
         try:
-            await self.tree.sync()
-            logger.info("MonsterGuard v%s slash commands synced", VERSION)
+            synced = await self.tree.sync()
+            logger.info(
+                "MonsterGuard v%s global slash synced (%s commands)",
+                VERSION,
+                len(synced),
+            )
         except Exception as exc:  # noqa: BLE001
             logger.warning("Slash sync failed (set MONSTER_DISCORD_APP_ID?): %s", exc)
+
+    def _safe_add_command(self, cmd: Any, *, guild: discord.abc.Snowflake | None = None) -> None:
+        try:
+            self.tree.add_command(cmd, guild=guild, override=True)
+        except Exception as exc:  # noqa: BLE001
+            logger.debug("add_command skip/fail %s: %s", getattr(cmd, "name", cmd), exc)
 
     async def _load_cogs(self) -> None:
         from monster_ai.modules.discord.guard.cogs import (
@@ -89,8 +100,12 @@ class MonsterGuardBot(commands.Bot):
             monitor,
             report,
             setup_wizard,
+            stale_ui,
+            tutorial,
         )
 
+        # Stale button sink FIRST so old message clicks never hard-fail
+        await stale_ui.setup(self)
         await setup_wizard.setup(self)
         await admin.setup(self)
         await intro.setup(self)
@@ -101,6 +116,7 @@ class MonsterGuardBot(commands.Bot):
         await education.setup(self)
         await features.setup(self)
         await report.setup(self)
+        await tutorial.setup(self)
         if self.guard_settings.trial_reminder_enabled:
             await commercial.setup(self)
 
@@ -125,26 +141,40 @@ class MonsterGuardBot(commands.Bot):
             )
         except Exception as exc:  # noqa: BLE001
             logger.debug("Presence update skipped: %s", exc)
-        if not self._guild_cmds_cleared:
-            self._guild_cmds_cleared = True
+        # Instant guild sync: copy global → each guild (no empty clear — that expires client cmds)
+        if not self._slash_synced:
+            self._slash_synced = True
+            await self._sync_guild_commands()
+
+    async def _sync_guild_commands(self) -> None:
+        """Push current tree to each guild for immediate availability without wiping to empty."""
+        for guild in list(self.guilds):
             try:
-                for guild in self.guilds:
-                    self.tree.clear_commands(guild=guild)
-                    await self.tree.sync(guild=guild)
-                logger.info("Cleared guild-scoped slash duplicates (global commands only)")
+                self.tree.copy_global_to(guild=guild)
+                synced = await self.tree.sync(guild=guild)
+                logger.info(
+                    "Guild slash synced guild=%s count=%s",
+                    guild.id,
+                    len(synced),
+                )
             except Exception as exc:  # noqa: BLE001
-                logger.warning("Guild command cleanup failed: %s", exc)
+                logger.warning("Guild slash sync failed guild=%s: %s", guild.id, exc)
 
     async def on_app_command_error(
         self, interaction: discord.Interaction, error: Exception
     ) -> None:
+        root = getattr(error, "original", error)
+        if isinstance(root, discord.NotFound):
+            # 10062 Unknown interaction — already timed out; do not spam
+            logger.warning("Slash interaction expired (10062): %s", getattr(interaction.command, "name", "?"))
+            return
         logger.exception("Slash command error: %s", error)
-        msg = "指令執行失敗，請確認 Bot 在線並稍後再試。"
+        msg = "指令執行失敗，請確認 Bot 在線並稍後再試。若剛失敗，可再試一次或用 `/aistatus`。"
         try:
             if interaction.response.is_done():
-                await interaction.followup.send(msg, ephemeral=True)
+                await interaction.followup.send(msg)
             else:
-                await interaction.response.send_message(msg, ephemeral=True)
+                await interaction.response.send_message(msg)
         except discord.HTTPException:
             pass
 
@@ -180,10 +210,12 @@ class MonsterGuardBot(commands.Bot):
                 embed = discord.Embed(
                     title=f"{PRODUCT_NAME} v{VERSION} 已加入伺服器",
                     description=(
-                        "感謝邀請 MonsterGuard！請執行 **`/guard setup`** 完成設定。\n\n"
+                        "感謝邀請 MonsterGuard！\n\n"
+                        "1. 頻道會自動發送 **📘 自動教程**（按鈕下一步）\n"
+                        "2. 或手動：`/guard tutorial` / `/tutorial`\n"
+                        "3. 完成 **`/guard setup`** 啟用攔截\n\n"
                         f"**可攔截：**{intercept_preview}\n"
-                        "**指令：** `/intro` `/monsterai` `/status` `/ai` `/callguard` `/防盜`\n\n"
-                        "也可使用 **`/chat`** 與本地 Monster AI 對話。"
+                        "**指令：** `/intro` `/status` `/ai` `/chat` `/ailearn`\n"
                     ),
                     color=0x00F5FF,
                 )
@@ -191,6 +223,17 @@ class MonsterGuardBot(commands.Bot):
                 await guild.owner.send(embed=embed)
         except discord.Forbidden:
             pass
+
+        # Auto tutorial in a public channel
+        if getattr(self.guard_settings, "auto_tutorial_enabled", True) and getattr(
+            self.guard_settings, "auto_tutorial_on_guild_join", True
+        ):
+            try:
+                from monster_ai.modules.discord.guard.cogs.tutorial import send_auto_tutorial
+
+                await send_auto_tutorial(self, guild, reason="guild_join")
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("Auto tutorial on_guild_join failed: %s", exc)
 
     async def on_message(self, message: discord.Message) -> None:
         await self.process_commands(message)

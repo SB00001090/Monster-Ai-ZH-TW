@@ -189,6 +189,23 @@ export const listCharacterShares = (ownerId: string) =>
 export const bindDiscordWebhook = (accountId: string, webhookUrl: string) =>
   monsterApi.guardianAccountDiscordWebhook(accountId, webhookUrl);
 
+export const getGuardianCurriculumStatus = () =>
+  monsterApi.guardianCurriculumStatus();
+
+export const getGuardianCurriculumTopics = (mode = "extended") =>
+  monsterApi.guardianCurriculumTopics(mode);
+
+export const postGuardianCurriculumStart = (body: {
+  mode?: string;
+  duration_hours?: number;
+  resume?: boolean;
+  fast_mode?: boolean;
+}) => monsterApi.guardianCurriculumStart(body);
+
+export const postGuardianCurriculumStop = () => monsterApi.guardianCurriculumStop();
+
+export const getGuardianGenerationSuccess = () => monsterApi.guardianGenerationSuccess();
+
 export const GUARDIAN_ACCOUNT_KEY = "guardian_account_id";
 export const GUARDIAN_DIARY_VAULT_KEY = "guardian_diary_vault_key";
 

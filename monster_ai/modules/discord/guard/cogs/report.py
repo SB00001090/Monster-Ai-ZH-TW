@@ -6,6 +6,8 @@ import re
 import discord
 from discord import app_commands
 
+from monster_ai.modules.discord.guard.interaction_utils import safe_defer, safe_followup
+
 _URL_RE = re.compile(r"https?://[^\s<>\"']+", re.I)
 
 
@@ -35,8 +37,10 @@ class ReportCog(discord.ext.commands.Cog):
         message_link: str,
         scam_type: app_commands.Choice[str],
     ) -> None:
+        if not await safe_defer(interaction):
+            return
         if not interaction.user.guild_permissions.manage_messages:
-            await interaction.response.send_message("需要「管理訊息」權限。", ephemeral=True)
+            await safe_followup(interaction, "需要「管理訊息」權限。")
             return
 
         bot = self.bot
@@ -48,11 +52,11 @@ class ReportCog(discord.ext.commands.Cog):
             message_id = int(parts[-1])
             channel = bot.get_channel(channel_id)
             if not isinstance(channel, discord.TextChannel):
-                await interaction.response.send_message("找不到頻道。", ephemeral=True)
+                await safe_followup(interaction, "找不到頻道。")
                 return
             msg = await channel.fetch_message(message_id)
         except (ValueError, IndexError, discord.NotFound, discord.Forbidden):
-            await interaction.response.send_message("無法讀取訊息連結。", ephemeral=True)
+            await safe_followup(interaction, "無法讀取訊息連結。")
             return
 
         urls = _URL_RE.findall(msg.content or "")
@@ -68,7 +72,7 @@ class ReportCog(discord.ext.commands.Cog):
             description=f"類型：**{scam_type.value}**\n已將域名加入本地黑名單。",
             color=0xFEE75C,
         )
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        await safe_followup(interaction, embed=embed)
 
 
 async def setup(bot: discord.Client) -> None:

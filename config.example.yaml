@@ -293,13 +293,16 @@ dify:
   api_key_env: DIFY_API_KEY
   workflow_image_id: ""
   workflow_multimodal_id: ""
+  workflow_error_id: ""  # import deploy/dify/workflow_guardian.json → paste workflow id
   min_quality_score: 0.70
   fallback_to_monster: true
 
 integrations:
   make_webhook_secret_env: MAKE_WEBHOOK_SECRET
   sentry_dsn_env: SENTRY_DSN
+  sentry_webhook_secret_env: SENTRY_WEBHOOK_SECRET
   sentry_enabled: false
+  sentry_auto_patch_enabled: true
   jam_enabled: false
   ahrefs_enabled: false
 
@@ -339,7 +342,11 @@ guardian:
     enabled: false
     require_grok_approval: true
     schedule_windows:
-      - "02:00-05:00"
+      - "00:00-23:59"
     max_topics_per_run: 3
     allow_anonymous_metrics: false
     art_triage_enabled: true
+    background_daemon: true
+    eternal_continuous: true
+    daemon_interval_seconds: 900
+    daemon_min_hours_between_runs: 0.25

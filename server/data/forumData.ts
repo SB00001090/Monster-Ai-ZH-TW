@@ -69,7 +69,7 @@ export const DEFAULT_FORUM_POSTS: ForumPost[] = [
     categoryId: 3,
     title: "Getting started with guest mode",
     content:
-      "You can explore chat and image generation without signing in. Guest data is stored in memory and resets when the server restarts.",
+      "You can explore chat and image generation without signing in. Guest characters persist in local memory-store across server restarts.",
     authorName: "Guest",
     language: "en",
     likes: 5,

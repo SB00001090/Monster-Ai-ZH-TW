@@ -394,6 +394,34 @@ export const monsterApi = {
       method: "POST",
       body: JSON.stringify(body),
     }),
+
+  guardianCurriculumStatus: () =>
+    request<Record<string, unknown>>("/api/guardian/learning/curriculum/status"),
+
+  guardianCurriculumTopics: (mode = "extended") =>
+    request<Record<string, unknown>>(
+      `/api/guardian/learning/curriculum/topics?mode=${encodeURIComponent(mode)}`,
+    ),
+
+  guardianCurriculumStart: (body: {
+    mode?: string;
+    duration_hours?: number;
+    resume?: boolean;
+    fast_mode?: boolean;
+  }) =>
+    request<Record<string, unknown>>("/api/guardian/learning/curriculum/start", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  guardianCurriculumStop: () =>
+    request<Record<string, unknown>>("/api/guardian/learning/curriculum/stop", {
+      method: "POST",
+      body: JSON.stringify({}),
+    }),
+
+  guardianGenerationSuccess: () =>
+    request<Record<string, unknown>>("/api/guardian/generation/success"),
 };
 
 export function monsterWsUrl(path = "/ws"): string {

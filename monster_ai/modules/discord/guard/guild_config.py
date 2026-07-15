@@ -12,6 +12,8 @@ DEFAULTS = {
     "ai_enabled": True,
     "guard_enabled": True,
     "setup_complete": False,
+    "tutorial_complete": False,
+    "tutorial_auto_sent": False,
 }
 
 
@@ -27,6 +29,8 @@ class GuildConfig:
     block_threshold: int = 80
     warn_threshold: int = 50
     ai_threshold: int = 40
+    tutorial_complete: bool = False
+    tutorial_auto_sent: bool = False
 
 
 class GuildConfigStore:
@@ -48,11 +52,33 @@ class GuildConfigStore:
                     setup_complete INTEGER DEFAULT 0,
                     block_threshold INTEGER DEFAULT 80,
                     warn_threshold INTEGER DEFAULT 50,
-                    ai_threshold INTEGER DEFAULT 40
+                    ai_threshold INTEGER DEFAULT 40,
+                    tutorial_complete INTEGER DEFAULT 0,
+                    tutorial_auto_sent INTEGER DEFAULT 0
                 )
                 """
             )
+            # Migrate older DBs
+            for col, default in (
+                ("tutorial_complete", "0"),
+                ("tutorial_auto_sent", "0"),
+            ):
+                try:
+                    await db.execute(
+                        f"ALTER TABLE guild_config ADD COLUMN {col} INTEGER DEFAULT {default}"
+                    )
+                except Exception:  # noqa: BLE001
+                    pass
             await db.commit()
+
+    def _row_bool(self, row: aiosqlite.Row, key: str, default: bool = False) -> bool:
+        try:
+            if key not in row.keys():
+                return default
+            val = row[key]
+            return bool(val) if val is not None else default
+        except (IndexError, KeyError):
+            return default
 
     async def get(self, guild_id: int) -> GuildConfig:
         async with aiosqlite.connect(self.db_path) as db:
@@ -74,6 +100,8 @@ class GuildConfigStore:
             block_threshold=row["block_threshold"],
             warn_threshold=row["warn_threshold"],
             ai_threshold=row["ai_threshold"],
+            tutorial_complete=self._row_bool(row, "tutorial_complete"),
+            tutorial_auto_sent=self._row_bool(row, "tutorial_auto_sent"),
         )
 
     async def save(self, cfg: GuildConfig) -> None:
@@ -83,8 +111,9 @@ class GuildConfigStore:
                 INSERT INTO guild_config (
                     guild_id, protection_level, action_mode, mod_channel_id,
                     ai_enabled, guard_enabled, setup_complete,
-                    block_threshold, warn_threshold, ai_threshold
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    block_threshold, warn_threshold, ai_threshold,
+                    tutorial_complete, tutorial_auto_sent
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(guild_id) DO UPDATE SET
                     protection_level=excluded.protection_level,
                     action_mode=excluded.action_mode,
@@ -94,7 +123,9 @@ class GuildConfigStore:
                     setup_complete=excluded.setup_complete,
                     block_threshold=excluded.block_threshold,
                     warn_threshold=excluded.warn_threshold,
-                    ai_threshold=excluded.ai_threshold
+                    ai_threshold=excluded.ai_threshold,
+                    tutorial_complete=excluded.tutorial_complete,
+                    tutorial_auto_sent=excluded.tutorial_auto_sent
                 """,
                 (
                     cfg.guild_id,
@@ -107,6 +138,8 @@ class GuildConfigStore:
                     cfg.block_threshold,
                     cfg.warn_threshold,
                     cfg.ai_threshold,
+                    int(cfg.tutorial_complete),
+                    int(cfg.tutorial_auto_sent),
                 ),
             )
             await db.commit()

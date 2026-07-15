@@ -1,4 +1,5 @@
 import { getOAuthLoginUrl, isOAuthConfigured, type OAuthProvider } from "@/const";
+import { useGuest } from "@/contexts/GuestContext";
 import { Button } from "@/components/ui/button";
 import { Github } from "lucide-react";
 
@@ -35,11 +36,13 @@ function ProviderButton({
   label,
   icon,
   size,
+  onBeforeLogin,
 }: {
   provider: OAuthProvider;
   label: string;
   icon: React.ReactNode;
   size: Props["size"];
+  onBeforeLogin: () => void;
 }) {
   return (
     <Button
@@ -48,6 +51,7 @@ function ProviderButton({
       size={size}
       className="w-full gap-2"
       onClick={() => {
+        onBeforeLogin();
         window.location.href = getOAuthLoginUrl(provider);
       }}
     >
@@ -58,6 +62,7 @@ function ProviderButton({
 }
 
 export default function OAuthProviderButtons({ size = "lg", layout = "stack" }: Props) {
+  const { exitGuest } = useGuest();
   const oauthConfigured = isOAuthConfigured();
   const isDev = import.meta.env.DEV;
   const showButtons = oauthConfigured || isDev;
@@ -74,18 +79,21 @@ export default function OAuthProviderButtons({ size = "lg", layout = "stack" }: 
         label="使用 Google 登入"
         icon={<GoogleIcon className="w-4 h-4" />}
         size={size}
+        onBeforeLogin={exitGuest}
       />
       <ProviderButton
         provider="github"
         label="使用 GitHub 登入"
         icon={<Github className="w-4 h-4" />}
         size={size}
+        onBeforeLogin={exitGuest}
       />
       <ProviderButton
         provider="discord"
         label="使用 Discord 綁定"
         icon={<Github className="w-4 h-4" />}
         size={size}
+        onBeforeLogin={exitGuest}
       />
     </div>
   );

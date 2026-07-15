@@ -6,10 +6,12 @@ import { useLocation } from "wouter";
 
 export default function SignInPrompt() {
   const { t } = useTranslation();
-  const { setAsGuest } = useGuest();
+  const { setAsGuest, exitGuest } = useGuest();
   const [, setLocation] = useLocation();
 
   const handleLogin = () => {
+    // Leave guest mode before real auth so useAuth can fetch auth.me
+    exitGuest();
     if (import.meta.env.DEV) {
       window.location.href = "/api/oauth/dev-login";
       return;

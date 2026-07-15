@@ -23,5 +23,8 @@ if ([string]::IsNullOrWhiteSpace($token)) {
 }
 
 $env:MONSTER_DISCORD_TOKEN = $token
-Write-Host "啟動 Monster AI + MonsterGuard（embedded 模式）..."
+if (-not $env:MONSTER_AI_CONNECT_CONSENT) {
+    $env:MONSTER_AI_CONNECT_CONSENT = "1"
+}
+Write-Host "啟動 Monster AI + MonsterGuard（embedded 模式，已授權本地 AI 連線）..."
 python main.py

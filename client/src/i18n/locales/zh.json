@@ -43,6 +43,7 @@
     "guardianSync": "Guardian 同步",
     "networkLearning": "自主網絡學習",
     "toddlerLearning": "幼兒教育式學習",
+    "guardianCurriculum": "72h 自主學習",
     "characterLifecycle": "角色生命週期",
     "pricing": "授權與定價",
     "integrations": "平台整合"
@@ -105,7 +106,7 @@
     "importError": "角色卡匯入失敗",
     "importInvalid": "無效的角色卡檔案",
     "useThisTemplate": "使用此模板",
-    "guestHint": "訪客模式：角色儲存在記憶體中，伺服器重啟後會清除",
+    "guestHint": "訪客模式：角色儲存在記憶體中，伺服器重啟後不會清除",
     "cloneCharacter": "複製角色",
     "generatePortrait": "生成頭像",
     "generatingPortrait": "正在生成頭像...",

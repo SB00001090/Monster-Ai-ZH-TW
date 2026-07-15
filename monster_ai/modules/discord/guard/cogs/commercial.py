@@ -4,6 +4,7 @@ from __future__ import annotations
 import discord
 from discord import app_commands
 
+from monster_ai.modules.discord.guard.interaction_utils import safe_defer, safe_followup
 from monster_ai.modules.discord.guard.ui.embeds import alert_embed
 
 PRICING = {
@@ -16,6 +17,8 @@ PRICING = {
 @app_commands.command(name="pricing", description="MonsterGuard 區域定價（商業推廣）")
 @app_commands.describe(region="HK / TW / GLOBAL")
 async def pricing_cmd(interaction: discord.Interaction, region: str = "HK") -> None:
+    if not await safe_defer(interaction):
+        return
     key = region.upper()
     price = PRICING.get(key, PRICING["GLOBAL"])
     embed = alert_embed(
@@ -23,8 +26,11 @@ async def pricing_cmd(interaction: discord.Interaction, region: str = "HK") -> N
         f"{price}\n\n7 日免費試用後將收到提醒。本地部署無需訂閱。",
         level="info",
     )
-    await interaction.response.send_message(embed=embed, ephemeral=True)
+    await safe_followup(interaction, embed=embed)
 
 
 async def setup(bot: discord.Client) -> None:
-    bot.tree.add_command(pricing_cmd)
+    try:
+        bot.tree.add_command(pricing_cmd, override=True)
+    except Exception:  # noqa: BLE001
+        pass

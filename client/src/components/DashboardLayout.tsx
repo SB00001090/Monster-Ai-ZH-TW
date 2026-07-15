@@ -47,6 +47,7 @@ const menuItems = [
   { icon: Shield, label: "navigation.guardianSync", path: "/guardian-sync" },
   { icon: Globe, label: "navigation.networkLearning", path: "/network-learning" },
   { icon: Baby, label: "navigation.toddlerLearning", path: "/toddler-learning" },
+  { icon: BookOpen, label: "navigation.guardianCurriculum", path: "/guardian-curriculum" },
   { icon: Library, label: "navigation.characterLifecycle", path: "/guardian-characters" },
   { icon: CreditCard, label: "navigation.pricing", path: "/pricing" },
   { icon: Plug, label: "navigation.integrations", path: "/integrations" },

@@ -47,3 +47,17 @@ export function schedulePersist() {
     void persistStore();
   }, 400);
 }
+
+export function registerShutdownPersist() {
+  if (!persistenceEnabled()) return;
+  const flush = () => {
+    if (saveTimer) {
+      clearTimeout(saveTimer);
+      saveTimer = null;
+    }
+    void persistStore();
+  };
+  process.once("SIGINT", flush);
+  process.once("SIGTERM", flush);
+  process.once("beforeExit", flush);
+}

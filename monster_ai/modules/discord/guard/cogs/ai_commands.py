@@ -8,6 +8,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+from monster_ai.modules.discord.guard.interaction_utils import safe_defer, safe_followup
 from monster_ai.modules.discord.guard.ui.embeds import alert_embed, neon_footer
 
 
@@ -38,28 +39,29 @@ class AICommandsCog(commands.Cog):
         prompt: str,
         mode: app_commands.Choice[str] | None = None,
     ) -> None:
+        if not await safe_defer(interaction, thinking=True):
+            return
+
         bot = self.bot
         guard = bot.guard_settings  # type: ignore[attr-defined]
         mode_val = mode.value if mode else "chat"
 
         if not self._allow(interaction.user.id, guard.chat_rate_limit_per_minute):
-            await interaction.response.send_message("請稍後再試（速率限制）。", ephemeral=True)
+            await safe_followup(interaction, "請稍後再試（速率限制）。")
             return
-
-        await interaction.response.defer(thinking=True)
 
         if mode_val == "analyze":
             svc = getattr(bot, "discord_service", None)
             client = svc._monster_client if svc else None  # noqa: SLF001
             if not client:
-                await interaction.followup.send("Monster AI client 未連接。", ephemeral=True)
+                await safe_followup(interaction, "Monster AI client 未連接。")
                 return
             try:
                 result = await client.analyze_scam(prompt)
                 if result.get("error") == "consent_required":
-                    await interaction.followup.send(
+                    await safe_followup(
+                        interaction,
                         "需先同意連線本地 Monster AI（設定 MONSTER_AI_CONNECT_CONSENT=1）。",
-                        ephemeral=True,
                     )
                     return
                 is_scam = result.get("is_scam")
@@ -71,14 +73,14 @@ class AICommandsCog(commands.Cog):
                     f"**建議動作：** `{result.get('recommended_action')}`",
                     level="warn" if is_scam else "info",
                 )
-                await interaction.followup.send(embed=embed)
+                await safe_followup(interaction, embed=embed)
             except Exception as exc:  # noqa: BLE001
-                await interaction.followup.send(f"分析失敗: {exc}", ephemeral=True)
+                await safe_followup(interaction, f"分析失敗: {exc}")
             return
 
         chat_svc = bot.chat  # type: ignore[attr-defined]
         if not guard.chat_bridge_enabled or chat_svc is None:
-            await interaction.followup.send("Chat Bridge 未啟用或未連接 Monster AI。", ephemeral=True)
+            await safe_followup(interaction, "Chat Bridge 未啟用或未連接 Monster AI。")
             return
         try:
             result = await chat_svc.send(
@@ -93,9 +95,9 @@ class AICommandsCog(commands.Cog):
                 content = content[:1900] + "…"
             embed = discord.Embed(description=content, color=0x00F5FF)
             embed.set_footer(text=neon_footer() + f" · 後端 {backend}")
-            await interaction.followup.send(embed=embed)
+            await safe_followup(interaction, embed=embed)
         except Exception as exc:  # noqa: BLE001
-            await interaction.followup.send(f"AI 查詢失敗: {exc}", ephemeral=True)
+            await safe_followup(interaction, f"AI 查詢失敗: {exc}")
 
 
 async def setup(bot: discord.Client) -> None:

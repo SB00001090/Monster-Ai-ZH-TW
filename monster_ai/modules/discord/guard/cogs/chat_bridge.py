@@ -7,6 +7,8 @@ from collections import defaultdict, deque
 import discord
 from discord import app_commands
 
+from monster_ai.modules.discord.guard.interaction_utils import safe_defer, safe_followup
+
 
 class ChatBridgeCog(discord.ext.commands.Cog):
     def __init__(self, bot: discord.Client) -> None:
@@ -29,24 +31,26 @@ class ChatBridgeCog(discord.ext.commands.Cog):
         message: str,
         persona: str = "grok",
     ) -> None:
+        if not await safe_defer(interaction, thinking=True):
+            return
+
         bot = self.bot
         guard = bot.guard_settings  # type: ignore[attr-defined]
         chat_svc = bot.chat  # type: ignore[attr-defined]
 
         if not guard.chat_bridge_enabled:
-            await interaction.response.send_message("Chat Bridge 未啟用。", ephemeral=True)
+            await safe_followup(interaction, "Chat Bridge 未啟用。")
             return
         if chat_svc is None:
-            await interaction.response.send_message(
+            await safe_followup(
+                interaction,
                 "Monster AI Chat 服務未連接。請以 embedded 模式啟動 Monster AI。",
-                ephemeral=True,
             )
             return
         if not self._allow(interaction.user.id, guard.chat_rate_limit_per_minute):
-            await interaction.response.send_message("請稍後再試（速率限制）。", ephemeral=True)
+            await safe_followup(interaction, "請稍後再試（速率限制）。")
             return
 
-        await interaction.response.defer(thinking=True)
         try:
             result = await chat_svc.send(
                 message,
@@ -60,9 +64,9 @@ class ChatBridgeCog(discord.ext.commands.Cog):
                 content = content[:1900] + "…"
             embed = discord.Embed(description=content, color=0x6EE7B7)
             embed.set_footer(text=f"Monster AI · 後端 {backend}")
-            await interaction.followup.send(embed=embed)
+            await safe_followup(interaction, embed=embed)
         except Exception as exc:  # noqa: BLE001
-            await interaction.followup.send(f"Chat 失敗: {exc}", ephemeral=True)
+            await safe_followup(interaction, f"Chat 失敗: {exc}")
 
     async def _resolve_session_id(
         self,
@@ -102,12 +106,15 @@ class ChatBridgeCog(discord.ext.commands.Cog):
         new_session: bool = False,
         web_search: bool | None = None,
     ) -> None:
+        if not await safe_defer(interaction, thinking=True):
+            return
+
         bot = self.bot
         roleplay_svc = bot.roleplay  # type: ignore[attr-defined]
         settings = bot.monster_settings  # type: ignore[attr-defined]
 
         if roleplay_svc is None or not settings.modules.roleplay.enabled:
-            await interaction.response.send_message("Roleplay 模組未啟用。", ephemeral=True)
+            await safe_followup(interaction, "Roleplay 模組未啟用。")
             return
 
         if not (message or "").strip() and not session_id and not new_session:
@@ -139,23 +146,22 @@ class ChatBridgeCog(discord.ext.commands.Cog):
                 description="\n".join(lines),
                 color=0xA78BFA,
             )
-            await interaction.response.send_message(embed=embed, ephemeral=True)
+            await safe_followup(interaction, embed=embed)
             return
 
         resolved = await self._resolve_session_id(
             roleplay_svc, interaction, session_id, new_session=new_session
         )
         if not resolved:
-            await interaction.response.send_message("無法建立 session。", ephemeral=True)
+            await safe_followup(interaction, "無法建立 session。")
             return
         if not (message or "").strip():
-            await interaction.response.send_message(
+            await safe_followup(
+                interaction,
                 f"已選擇 session：`{resolved}`\n請加上 `message:` 開始對話。",
-                ephemeral=True,
             )
             return
 
-        await interaction.response.defer(thinking=True)
         try:
             force_web = web_search
             if force_web is None and message.strip().lower().startswith(("搜尋:", "搜尋：", "search:")):
@@ -174,9 +180,9 @@ class ChatBridgeCog(discord.ext.commands.Cog):
             if result.get("web_lore_used"):
                 footer += " · 網絡世界觀"
             embed.set_footer(text=footer)
-            await interaction.followup.send(embed=embed)
+            await safe_followup(interaction, embed=embed)
         except Exception as exc:  # noqa: BLE001
-            await interaction.followup.send(f"Roleplay 失敗: {exc}", ephemeral=True)
+            await safe_followup(interaction, f"Roleplay 失敗: {exc}")
 
 
 async def setup(bot: discord.Client) -> None:

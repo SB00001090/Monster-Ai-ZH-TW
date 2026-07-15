@@ -43,6 +43,7 @@
     "guardianSync": "Guardian Sync",
     "networkLearning": "Network Learning",
     "toddlerLearning": "Toddler Learning",
+    "guardianCurriculum": "72h Curriculum",
     "characterLifecycle": "Character Lifecycle",
     "pricing": "Pricing & Trial",
     "integrations": "Integrations"
@@ -105,7 +106,7 @@
     "importError": "Failed to import character card",
     "importInvalid": "Invalid character card file",
     "useThisTemplate": "Use This Template",
-    "guestHint": "Guest mode: characters are stored in memory and reset when the server restarts",
+    "guestHint": "Guest mode: characters are stored in memory and persist across server restarts",
     "cloneCharacter": "Clone Character",
     "generatePortrait": "Generate Portrait",
     "generatingPortrait": "Generating portrait...",

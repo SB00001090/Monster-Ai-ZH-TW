@@ -9,12 +9,18 @@ import { APP_LOGO_SRC } from "@/const";
 
 export default function LoginPage() {
   const { t } = useTranslation();
-  const { setAsGuest } = useGuest();
+  const { setAsGuest, exitGuest } = useGuest();
   const [, setLocation] = useLocation();
 
   const handleGuestMode = () => {
     setAsGuest();
     setLocation("/");
+  };
+
+  /** Clear guest flags before real auth so auth.me is not skipped after redirect. */
+  const beginRealLogin = (href: string) => {
+    exitGuest();
+    window.location.href = href;
   };
 
   const oauthConfigured = isOAuthConfigured();
@@ -23,17 +29,17 @@ export default function LoginPage() {
   const handleLogin = () => {
     if (!oauthConfigured) {
       if (isDev) {
-        window.location.href = "/api/oauth/dev-login";
+        beginRealLogin("/api/oauth/dev-login");
         return;
       }
       handleGuestMode();
       return;
     }
-    window.location.href = getOAuthLoginUrl();
+    beginRealLogin(getOAuthLoginUrl());
   };
 
   const handleDevLogin = () => {
-    window.location.href = "/api/oauth/dev-login";
+    beginRealLogin("/api/oauth/dev-login");
   };
 
   return (
