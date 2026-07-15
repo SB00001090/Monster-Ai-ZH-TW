@@ -75,18 +75,30 @@ fun HomeScreen(
             singleLine = true,
         )
         Text(
-            "USB：電腦執行 install-apk-adb.bat（唔使 IP）\n遠端：貼 run-tunnel.bat 嘅 HTTPS 網址",
+            "USB：在電腦執行 install-apk-adb.bat（無需輸入 LAN IP）\n" +
+                "遠端：貼上 run-tunnel.bat 產生的 Cloudflare Tunnel HTTPS 網址\n" +
+                "僅支援 Tunnel / USB — 無 Tailscale、無 QR Code",
             style = MaterialTheme.typography.labelSmall,
             modifier = Modifier.padding(top = 4.dp),
         )
         Spacer(Modifier.height(8.dp))
-        Button(onClick = onSave, modifier = Modifier.fillMaxWidth()) { Text("儲存 Tunnel URL") }
-        Button(onClick = onTest, modifier = Modifier.fillMaxWidth()) { Text("測試連線") }
+        Button(
+            onClick = onSave,
+            enabled = connectionState != ConnectionState.CONNECTING,
+            modifier = Modifier.fillMaxWidth(),
+        ) { Text("儲存 Tunnel URL") }
+        Button(
+            onClick = onTest,
+            enabled = connectionState != ConnectionState.CONNECTING,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(if (connectionState == ConnectionState.CONNECTING) "連線測試中…" else "測試連線")
+        }
         Spacer(Modifier.height(8.dp))
         Button(onClick = onNavPaywall, modifier = Modifier.fillMaxWidth()) { Text("付費 / 試用") }
         Button(onClick = onNavPrivacy, modifier = Modifier.fillMaxWidth()) { Text("透明資安告知") }
         Button(onClick = onNavGuardianSync, modifier = Modifier.fillMaxWidth()) {
-            Text("Monster Guardian 雲端同步")
+            Text("E2E 加密同步（Guardian Sync）")
         }
     }
 }

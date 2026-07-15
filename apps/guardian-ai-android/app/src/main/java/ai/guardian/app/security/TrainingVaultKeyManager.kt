@@ -7,7 +7,7 @@ import java.security.MessageDigest
 
 /**
  * Training vault key material ??Android Keystore backed.
- * Developed by Suckbob | Monster Guardian AI
+ * Developed by Suckbob | Guardian Ai
  *
  * Passphrase + device-bound salt; never stores plaintext training images.
  */

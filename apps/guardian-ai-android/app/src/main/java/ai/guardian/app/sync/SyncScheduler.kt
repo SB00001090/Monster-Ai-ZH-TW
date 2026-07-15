@@ -1,5 +1,6 @@
 package ai.guardian.app.sync
 
+import ai.guardian.app.learning.LearningScheduler
 import android.content.Context
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -34,5 +35,7 @@ object SyncScheduler {
             ExistingPeriodicWorkPolicy.KEEP,
             guardian,
         )
+
+        LearningScheduler.schedule(context)
     }
 }

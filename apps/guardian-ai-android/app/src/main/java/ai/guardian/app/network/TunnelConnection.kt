@@ -13,9 +13,14 @@ object TunnelConnection {
         RegexOption.IGNORE_CASE,
     )
 
+    private fun stripPasteArtifacts(raw: String): String =
+        raw.trim()
+            .replace("\uFEFF", "")
+            .replace(Regex("[\\s\u00A0\u200B-\u200D\uFEFF]+"), "")
+
     fun normalizeUrl(raw: String?): String? {
         if (raw.isNullOrBlank()) return null
-        var u = raw.trim().trimEnd('/')
+        var u = stripPasteArtifacts(raw).trimEnd('/')
         if (!u.startsWith("http://") && !u.startsWith("https://")) {
             u = "https://$u"
         }

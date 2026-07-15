@@ -1,6 +1,6 @@
 # USB ADB 直接安裝 + 本機連線
 
-**Developed by Suckbob | Monster AI Call Guard** · v1.3.0
+**Developed by Suckbob | Guardian Ai**
 
 ## 原理
 
@@ -14,13 +14,13 @@
 ## 一鍵安裝
 
 ```bat
-install-apk-adb.bat
+scripts\guardian\install-apk-adb.bat
 ```
 
 或：
 
 ```powershell
-scripts\callguard\install-apk-adb.ps1
+scripts\guardian\install-apk-adb.ps1
 ```
 
 ### 手機準備
@@ -30,7 +30,7 @@ scripts\callguard\install-apk-adb.ps1
 
 ### 電腦準備
 
-1. `python main.py` 或 `start-callguard.bat`
+1. `python main.py` 或 `run.bat`
 2. 執行 `install-apk-adb.bat`
 
 腳本會自動：
@@ -51,6 +51,6 @@ App 會**優先 USB**，拔掉 USB 或無 reverse 時自動用 Tunnel。
 
 ```bat
 adb devices
-adb install -r dist\MonsterCallGuard-v1.3.0-signed.apk
+adb install -r dist\GuardianAi-latest-signed.apk
 adb reverse tcp:7860 tcp:7860
 ```

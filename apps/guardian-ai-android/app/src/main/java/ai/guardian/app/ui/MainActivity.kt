@@ -131,13 +131,24 @@ class MainActivity : ComponentActivity() {
         }
         val saved = connectionManager.saveTunnelUrl(tunnelUrl)
         if (saved == null) {
-            Toast.makeText(this, "無效 URL", Toast.LENGTH_SHORT).show()
+            statusText = "無法儲存 — 請貼完整 https://xxx.trycloudflare.com"
+            Toast.makeText(this, "無效 URL", Toast.LENGTH_LONG).show()
             return
         }
         tunnelUrl = saved
-        Toast.makeText(this, "已儲存 Tunnel URL", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "已儲存，正在測試連線…", Toast.LENGTH_SHORT).show()
         lifecycleScope.launch {
+            val ok = connectionManager.probeHealth()
             statusText = HomeMonsterClient(this@MainActivity).testConnection()
+            if (ok) {
+                Toast.makeText(this@MainActivity, "連線成功", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(
+                    this@MainActivity,
+                    "已儲存但連線失敗 — 請確認電腦已執行 auto-guardian.bat 且 URL 為最新",
+                    Toast.LENGTH_LONG,
+                ).show()
+            }
         }
     }
 

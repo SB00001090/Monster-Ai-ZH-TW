@@ -19,18 +19,45 @@ class TrialManager(context: Context) {
             val masterKey = MasterKey.Builder(context)
                 .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
                 .build()
-            EncryptedSharedPreferences.create(
+            val prefs = EncryptedSharedPreferences.create(
                 context,
-                "callguard_trial_secure",
+                PREFS_SECURE,
                 masterKey,
                 EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
                 EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
             )
+            migrateLegacyTrialPrefs(context, prefs)
+            prefs
         } catch (e: Exception) {
-            // DOOGEE / MediaTek devices may lack a working Android Keystore TEE.
             Log.w(TAG, "Encrypted prefs unavailable, using fallback store", e)
-            context.getSharedPreferences(FALLBACK_PREFS, Context.MODE_PRIVATE)
+            val fallback = context.getSharedPreferences(FALLBACK_PREFS, Context.MODE_PRIVATE)
+            migrateLegacyFallbackPrefs(context, fallback)
+            fallback
         }
+    }
+
+    private fun migrateLegacyTrialPrefs(context: Context, target: SharedPreferences) {
+        if (target.contains(KEY_TRIAL_START) || target.contains(KEY_PURCHASED)) return
+        try {
+            val legacy = context.getSharedPreferences(LEGACY_SECURE, Context.MODE_PRIVATE)
+            if (!legacy.contains(KEY_TRIAL_START) && !legacy.contains(KEY_PURCHASED)) return
+            target.edit()
+                .putLong(KEY_TRIAL_START, legacy.getLong(KEY_TRIAL_START, System.currentTimeMillis()))
+                .putBoolean(KEY_PURCHASED, legacy.getBoolean(KEY_PURCHASED, false))
+                .apply()
+        } catch (_: Exception) {
+            /* legacy encrypted store unavailable */
+        }
+    }
+
+    private fun migrateLegacyFallbackPrefs(context: Context, target: SharedPreferences) {
+        if (target.contains(KEY_TRIAL_START) || target.contains(KEY_PURCHASED)) return
+        val legacy = context.getSharedPreferences(LEGACY_FALLBACK, Context.MODE_PRIVATE)
+        if (!legacy.contains(KEY_TRIAL_START) && !legacy.contains(KEY_PURCHASED)) return
+        target.edit()
+            .putLong(KEY_TRIAL_START, legacy.getLong(KEY_TRIAL_START, System.currentTimeMillis()))
+            .putBoolean(KEY_PURCHASED, legacy.getBoolean(KEY_PURCHASED, false))
+            .apply()
     }
 
     fun ensureTrialStarted() {
@@ -60,7 +87,10 @@ class TrialManager(context: Context) {
 
     companion object {
         private const val TAG = "TrialManager"
-        private const val FALLBACK_PREFS = "callguard_trial_fallback"
+        private const val PREFS_SECURE = "guardian_ai_trial_secure"
+        private const val FALLBACK_PREFS = "guardian_ai_trial_fallback"
+        private const val LEGACY_SECURE = "callguard_trial_secure"
+        private const val LEGACY_FALLBACK = "callguard_trial_fallback"
         private const val KEY_TRIAL_START = "trial_start_ms"
         private const val KEY_PURCHASED = "purchased_lifetime"
     }

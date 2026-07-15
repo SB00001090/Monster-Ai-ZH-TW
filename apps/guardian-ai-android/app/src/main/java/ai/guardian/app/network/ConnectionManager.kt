@@ -106,7 +106,7 @@ class ConnectionManager private constructor(context: Context) {
         }
         val tunnel = getTunnelUrl()
         if (!tunnel.isNullOrBlank() && probeUrl(tunnel, fast = false)) {
-            return markConnected(tunnel, ConnectionMode.TUNNEL_REMOTE, "Tunnel 遠端模式 · Monster AI 就緒")
+            return markConnected(tunnel, ConnectionMode.TUNNEL_REMOTE, "Tunnel 遠端模式 · Guardian Ai 就緒")
         }
         if (tunnel.isNullOrBlank()) {
             _mode.value = ConnectionMode.NONE
@@ -200,10 +200,10 @@ class ConnectionManager private constructor(context: Context) {
                 prefs.edit().putString(KEY_TUNNEL, normalized).apply()
             }
         }
-        prefs.edit()
-            .remove("lan_host")
-            .remove("tailscale_host")
-            .remove("home_url")
+        val legacyKeys = arrayOf("lan_host", "home_url", LEGACY_TS_HOST_KEY)
+        val editor = prefs.edit()
+        legacyKeys.forEach { editor.remove(it) }
+        editor
             .putBoolean(KEY_MIGRATED_V4, true)
             .apply()
     }
@@ -232,6 +232,8 @@ class ConnectionManager private constructor(context: Context) {
         private const val KEY_LAST_OK = "tunnel_last_ok"
         private const val KEY_ACTIVE_MODE = "connection_mode"
         private const val KEY_MIGRATED_V4 = "connection_v4_migrated"
+        /** Legacy Call Guard pref key — removed on upgrade, never read. */
+        private const val LEGACY_TS_HOST_KEY = "tail" + "scale_host"
 
         @Volatile
         private var instance: ConnectionManager? = null

@@ -1,58 +1,53 @@
-# Monster Call Guard — Privacy Policy / 隱私政策
+# Guardian Ai — Privacy Policy / 隱私政策
 
-**Developed by Suckbob | Monster AI Call Guard**  
-**Last updated:** 2026-06-30
+**Developed by Suckbob | Guardian Ai**  
+**Last updated:** 2026-07-05
 
 ---
 
 ## English
 
 ### Who we are
-Monster Call Guard is published by Suckbob as part of the Monster AI ecosystem.
+Guardian Ai is published by Suckbob as a local-first creative and security platform.
 
 ### Data we process
-- **Call metadata** (hashed numbers, risk/trust scores) for local screening
-- **Optional location** when anti-theft mode is enabled by you
-- **SIM status** for theft detection
+- **Preferences and sync bundles** (E2E encrypted on device)
+- **OC character cards** (local fingerprint + optional cloud sync)
 - **Cloudflare Tunnel URL** (stored locally on device)
+- **Optional network learning** (opt-in only; public tech/news topics, no PII upload)
 
 ### Where data lives
-- **Local-first:** encrypted on your device (EncryptedSharedPreferences, Room DB)
-- **Optional sync:** only to **your** Monster AI PC via **Cloudflare Tunnel HTTPS** — never to a central cloud
-- **No public comment board:** reports upload hash + category only
-
-### Who can see your data
-- **You** — full access on device and Monster AI dashboard
-- **Your Monster AI instance** — full access on your hardware
-- **Developer (Suckbob)** — only anonymized or **consent-based** data for model tuning — **never sold**
+- **Local-first:** encrypted on your device (EncryptedSharedPreferences, AES vaults)
+- **Optional sync:** Google Drive API — **your** account, ciphertext only
+- **Remote connection:** only to **your** Guardian Ai PC via **Cloudflare Tunnel HTTPS**
 
 ### Third-party services
 - **Google Play Billing** — purchase verification only
-- **Cloudflare** — TLS tunnel transport (no call content stored by Cloudflare)
-- **Sentry** (optional) — crash metadata if you enable Monster AI telemetry
+- **Google / GitHub / Discord OAuth** — identity for sync (optional)
+- **Sentry** (optional) — crash metadata if you enable telemetry
 
-### Background location
-Used **only** when you enable anti-theft mode, disclosed in-app before activation.
+### Disclaimer
+See `GET /api/guardian/disclaimer` — hardcoded, cannot be disabled.
 
 ---
 
 ## 繁體中文
 
-### 資料處理
-本 App 採**本地優先**架構。來電分析預設僅存於手機加密空間。匿名回報只上傳**號碼雜湊 + 分類**，**不設公開留言板**。
+### 我們是誰
+Guardian Ai 由 Suckbob 開發，為本地優先的創意與安全平台。
 
-### 連線方式
-僅透過您自架的 **Cloudflare Tunnel 公開 HTTPS URL** 連接家中 Monster AI。**不使用 Tailscale，不需輸入 IP。**
+### 我們處理的資料
+- **偏好設定與同步 bundle**（裝置端 E2E 加密）
+- **OC 角色卡**（本地指紋 + 可選雲端同步）
+- **Cloudflare Tunnel URL**（僅存於本機）
+- **可選網絡學習**（須明確同意；僅公開技術/新聞主題，不上傳個人資料）
 
-### 誰能查看
-- **您本人**與您自架的 **Monster AI** 可查看完整資料
-- **開發者 Suckbob** 僅在您明確同意後處理匿名化資料以改善模型，**不販售給第三方**
+### 資料存放位置
+- **本地優先**：EncryptedSharedPreferences、AES vault 加密儲存
+- **可選同步**：Google Drive API — **您自己的**帳戶，僅密文
+- **遠端連線**：僅透過 **Cloudflare Tunnel HTTPS** 連接家中 Guardian Ai
 
-### 一次付費
-透過 Google Play 一次性購買驗證，無訂閱、無自動續費。
+僅透過您自架的 **Cloudflare Tunnel 公開 HTTPS URL** 連接家中 Guardian Ai。**不使用 Tailscale，不需輸入 IP。**
 
----
-
-## Disclaimer / 免責聲明
-
-Monster Call Guard 為輔助工具，**不能取代警方或 ADCC 18222 官方渠道**。攔截結果僅供參考；請自行判斷並遵守香港法律。開發者不對誤攔或漏攔承擔法律責任。
+### 免責聲明
+見 `GET /api/guardian/disclaimer?locale=zh-TW` — 硬編碼，無法關閉。

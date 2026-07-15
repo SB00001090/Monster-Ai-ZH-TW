@@ -49,6 +49,7 @@ fun GuardianSyncScreen(
     var rememberPass by remember { mutableStateOf(creds.getPassphrase() != null) }
     var status by remember { mutableStateOf("輸入 Google/GitHub 帳戶 sub 與 E2E passphrase（≥8 字元）") }
     var manifest by remember { mutableStateOf("") }
+    var busy by remember { mutableStateOf(false) }
     var selectedBundles by remember {
         mutableStateOf(setOf("preferences", "oc_cards"))
     }
@@ -82,11 +83,18 @@ fun GuardianSyncScreen(
             .padding(16.dp)
             .verticalScroll(rememberScrollState()),
     ) {
-        Text("◢ Monster Guardian 同步 ◤", style = MaterialTheme.typography.headlineSmall, color = NeonCyan)
+        Text("◢ Guardian Ai E2E 同步 ◤", style = MaterialTheme.typography.headlineSmall, color = NeonCyan)
         Text("Developed by Suckbob | Guardian Ai", style = MaterialTheme.typography.labelSmall)
-        Text("端到端加密 · 與 Web /guardian-sync 互通", color = NeonGreen, style = MaterialTheme.typography.labelMedium)
+        Text(
+            "端到端加密同步 · 與 Web /guardian-sync 互通 · 訓練庫僅密文",
+            color = NeonGreen,
+            style = MaterialTheme.typography.labelMedium,
+        )
         Spacer(Modifier.height(12.dp))
-        Text(status, style = MaterialTheme.typography.bodySmall)
+        Text(status, style = MaterialTheme.typography.bodySmall, color = if (busy) NeonCyan else Color.Unspecified)
+        if (busy) {
+            Text("同步進行中，請勿重複點擊…", style = MaterialTheme.typography.labelSmall, color = NeonCyan)
+        }
         Spacer(Modifier.height(12.dp))
 
         OutlinedTextField(
@@ -138,83 +146,111 @@ fun GuardianSyncScreen(
         Spacer(Modifier.height(12.dp))
         Button(
             onClick = {
+                if (busy) return@Button
                 creds.saveIdentity(provider, providerSub)
                 creds.savePassphrase(passphrase, rememberPass)
                 refreshManifest()
             },
+            enabled = !busy,
             modifier = Modifier.fillMaxWidth(),
         ) { Text("儲存身份並刷新 Manifest") }
 
         Button(
             onClick = {
+                if (busy) return@Button
                 scope.launch {
                     if (passphrase.length < 8) {
-                        status = "Passphrase 至少 8 字"
+                        status = "Passphrase 至少 8 字元"
                         return@launch
                     }
-                    creds.saveIdentity(provider, providerSub)
-                    creds.savePassphrase(passphrase, rememberPass)
-                    status = "開始上傳中…"
-                    var ok = 0
-                    for (bundleType in selectedBundles) {
-                        val payload = withContext(Dispatchers.IO) {
-                            when (bundleType) {
-                                "preferences" -> GuardianSyncClient.buildPreferencesPayload(
-                                    context,
-                                    ConnectionManager.get(context).getTunnelUrl(),
-                                )
-                                "oc_cards" -> GuardianSyncClient.buildOcPayload()
-                                "chat_sessions" -> JSONObject()
-                                    .put("version", 1)
-                                    .put("platform", "android")
-                                    .put("sessions", org.json.JSONArray())
-                                "training_vault" -> client.exportTrainingVault() ?: JSONObject()
-                                else -> JSONObject()
-                            }
-                        }
-                        val result = withContext(Dispatchers.IO) {
-                            client.uploadBundle(
-                                provider = provider,
-                                providerSub = providerSub,
-                                passphrase = passphrase,
-                                bundleType = bundleType,
-                                payload = payload,
-                                deviceId = creds.deviceId(context),
-                            )
-                        }
-                        if (result?.optBoolean("ok") == true) ok++
+                    if (selectedBundles.isEmpty()) {
+                        status = "請至少勾選一個 bundle（preferences / oc_cards / training_vault…）"
+                        return@launch
                     }
-                    status = "已上傳 $ok / ${selectedBundles.size} bundle"
-                    refreshManifest()
+                    busy = true
+                    try {
+                        creds.saveIdentity(provider, providerSub)
+                        creds.savePassphrase(passphrase, rememberPass)
+                        status = "開始 E2E 上傳（${selectedBundles.size} 項）…"
+                        var ok = 0
+                        val total = selectedBundles.size
+                        var step = 0
+                        for (bundleType in selectedBundles) {
+                            step++
+                            status = "上傳中 $step/$total · $bundleType"
+                            val payload = withContext(Dispatchers.IO) {
+                                when (bundleType) {
+                                    "preferences" -> GuardianSyncClient.buildPreferencesPayload(
+                                        context,
+                                        ConnectionManager.get(context).getTunnelUrl(),
+                                    )
+                                    "oc_cards" -> GuardianSyncClient.buildOcPayload()
+                                    "chat_sessions" -> JSONObject()
+                                        .put("version", 1)
+                                        .put("platform", "android")
+                                        .put("sessions", org.json.JSONArray())
+                                    "training_vault" -> client.exportTrainingVault() ?: JSONObject()
+                                    else -> JSONObject()
+                                }
+                            }
+                            val result = withContext(Dispatchers.IO) {
+                                client.uploadBundle(
+                                    provider = provider,
+                                    providerSub = providerSub,
+                                    passphrase = passphrase,
+                                    bundleType = bundleType,
+                                    payload = payload,
+                                    deviceId = creds.deviceId(context),
+                                )
+                            }
+                            if (result?.optBoolean("ok") == true) ok++
+                        }
+                        status = if (ok == total) {
+                            "E2E 上傳完成 $ok / $total"
+                        } else {
+                            "部分失敗：已上傳 $ok / $total（請檢查 Tunnel 連線與 passphrase）"
+                        }
+                        refreshManifest()
+                    } finally {
+                        busy = false
+                    }
                 }
             },
+            enabled = !busy,
             modifier = Modifier.fillMaxWidth(),
-        ) { Text("開始上傳") }
+        ) { Text(if (busy) "同步中…" else "開始上傳") }
 
         Button(
             onClick = {
+                if (busy) return@Button
                 scope.launch {
                     if (passphrase.length < 8) {
-                        status = "Passphrase 至少 8 字"
+                        status = "Passphrase 至少 8 字元"
                         return@launch
                     }
-                    status = "下載 preferences…"
-                    val result = withContext(Dispatchers.IO) {
-                        client.downloadBundle(provider, providerSub, passphrase, "preferences")
-                    }
-                    if (result?.optBoolean("ok") != true) {
-                        status = "下載失敗：${result?.optString("reason", "unknown")}"
-                        return@launch
-                    }
-                    val payload = result.opt("payload")
-                    if (payload is JSONObject) {
-                        GuardianSyncClient.applyPreferences(context, payload)
-                        status = "已套用 preferences（含 Tunnel URL）"
-                    } else {
-                        status = "payload 格式錯誤"
+                    busy = true
+                    try {
+                        status = "下載 preferences…"
+                        val result = withContext(Dispatchers.IO) {
+                            client.downloadBundle(provider, providerSub, passphrase, "preferences")
+                        }
+                        if (result?.optBoolean("ok") != true) {
+                            status = "下載失敗：${result?.optString("reason", "unknown")}"
+                            return@launch
+                        }
+                        val payload = result.opt("payload")
+                        if (payload is JSONObject) {
+                            GuardianSyncClient.applyPreferences(context, payload)
+                            status = "已套用 preferences（含 Tunnel URL）"
+                        } else {
+                            status = "payload 格式錯誤"
+                        }
+                    } finally {
+                        busy = false
                     }
                 }
             },
+            enabled = !busy,
             modifier = Modifier.fillMaxWidth(),
         ) { Text("下載並套用 Preferences") }
 

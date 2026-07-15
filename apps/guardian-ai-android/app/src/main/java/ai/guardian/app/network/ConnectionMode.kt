@@ -1,6 +1,6 @@
 package ai.guardian.app.network
 
-/** USB adb reverse (127.0.0.1) or Cloudflare Tunnel HTTPS. No LAN IP / Tailscale. */
+/** USB adb reverse (127.0.0.1) or Cloudflare Tunnel HTTPS. No LAN IP / legacy VPN. */
 enum class ConnectionMode {
     USB_LOCAL,
     TUNNEL_REMOTE,

@@ -70,7 +70,7 @@ class BillingManager(
     }
 
     fun formattedPrice(): String =
-        productDetails?.oneTimePurchaseOfferDetails?.formattedPrice ?: "??
+        productDetails?.oneTimePurchaseOfferDetails?.formattedPrice ?: "—"
 
     fun launchPurchase(activity: Activity) {
         val details = productDetails ?: run {
