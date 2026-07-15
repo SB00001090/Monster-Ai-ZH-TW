@@ -141,7 +141,7 @@ Error → client autoErrorReporter / Sentry
 | Repo | 語言 | 說明 |
 |------|------|------|
 | [SB00001090/Guardian-Ai](https://github.com/SB00001090/Guardian-Ai) | English | 英文主庫 |
-| [SB00001090/Monster-Ai-ZH-TW](https://github.com/SB00001090/Monster-Ai-ZH-TW) | 繁體中文 | 繁中 README 與同步維護庫 |
+| [SB00001090/Guardian-Ai-ZH-TW](https://github.com/SB00001090/Guardian-Ai-ZH-TW) | 繁體中文 | 繁中 README 與同步維護庫 |
 
 README 需含：Guardian API 表 · 加密訓練庫 · 幼兒教育式學習 · E2E 同步 · Tunnel 部署 · 免責聲明 · 開發者標示
 

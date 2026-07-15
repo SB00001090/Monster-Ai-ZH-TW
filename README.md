@@ -13,16 +13,16 @@
 **GitHub CLI（需先安裝 [gh](https://cli.github.com/) 並登入）：**
 
 ```bash
-gh repo clone SB00001090/Monster-Ai-ZH-TW
-cd Monster-Ai-ZH-TW
+gh repo clone SB00001090/Guardian-Ai-ZH-TW
+cd Guardian-Ai-ZH-TW
 run.bat
 ```
 
 **或使用 git：**
 
 ```bash
-git clone https://github.com/SB00001090/Monster-Ai-ZH-TW.git
-cd Monster-Ai-ZH-TW
+git clone https://github.com/SB00001090/Guardian-Ai-ZH-TW.git
+cd Guardian-Ai-ZH-TW
 run.bat
 ```
 
