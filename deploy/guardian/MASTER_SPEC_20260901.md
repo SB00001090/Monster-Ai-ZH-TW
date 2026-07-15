@@ -48,7 +48,7 @@
 
 ---
 
-## 3. 訓練檔案加密
+## 3. 訓練檔案加密（加密訓練庫）
 
 - 格式：`.mgtrain`（AES-256-GCM）
 - 路徑：`data/guardian/training_vault/{good,bad,template,prompt,lora}/`
@@ -56,6 +56,10 @@
 - 禁止明文：`encrypt_quality_assets: true`
 - 訓練：`decrypt_asset_to_memory()` → 用完即清
 - 雲端：`training/export` → `sync/upload` bundle=`training_vault`
+- **遷移工具**：`POST /api/guardian/training/migrate`
+  - 預設 `{"dry_run": true}` 僅預覽候選檔（不刪明文）
+  - 實際遷移：`{"dry_run": false}`（依 `delete_plaintext_after_encrypt` 決定是否刪明文）
+- **藝術品質分診**：`ArtTriageEngine` → good/bad → 寫入加密訓練庫
 
 ---
 
@@ -117,7 +121,7 @@ Error → client autoErrorReporter / Sentry
 | 檔案 | 用途 |
 |------|------|
 | `workflow_guardian.json` | 全棧：免責→OC→訓練vault→品質→vault→chat→錯誤→監督 |
-| `workflow_callguard_trust.json` | 信任分數（CallGuard 已取消 UI，API 保留） |
+| `workflow_network_learning.json` | 網絡學習 + art triage + Grok 監督 |
 | `workflow_image_quality.json` | 圖片品質 <70% 重試 |
 | `workflow_multimodal.json` | RP + 圖 + 音訊編排 |
 
@@ -126,7 +130,7 @@ Error → client autoErrorReporter / Sentry
 ## 10. Cloudflare Tunnel + USB APK
 
 - `run-tunnel.bat` → `deploy_cloudflare.py --tunnel`
-- URL → `data/callguard/tunnel_url.txt` + `MONSTER_TUNNEL_URL` 啟動載入
+- URL → `data/guardian-ai/tunnel_url.txt` + `GUARDIAN_TUNNEL_URL` 啟動載入
 - **無** Tailscale · **無** QR Code
 - USB：`install-apk-adb.bat` + `adb reverse tcp:7860`
 
@@ -134,9 +138,12 @@ Error → client autoErrorReporter / Sentry
 
 ## 11. GitHub Repo 要點
 
-Repo：`SB00001090/Guardian-Ai`
+| Repo | 語言 | 說明 |
+|------|------|------|
+| [SB00001090/Guardian-Ai](https://github.com/SB00001090/Guardian-Ai) | English | 英文主庫 |
+| [SB00001090/Monster-Ai-ZH-TW](https://github.com/SB00001090/Monster-Ai-ZH-TW) | 繁體中文 | 繁中 README 與同步維護庫 |
 
-README 需含：Guardian API 表 · 加密訓練說明 · Tunnel 部署 · 免責聲明連結 · 開發者標示
+README 需含：Guardian API 表 · 加密訓練庫 · 幼兒教育式學習 · E2E 同步 · Tunnel 部署 · 免責聲明 · 開發者標示
 
 ---
 

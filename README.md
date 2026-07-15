@@ -40,9 +40,13 @@ See [`deploy/guardian/ARCHITECTURE.md`](deploy/guardian/ARCHITECTURE.md) · [`MA
 | **Guardian Ai** (E2E sync, OC fingerprint, toddler learning, error learning) | Working |
 | Cloudflare Tunnel + USB APK install (no Tailscale / QR) | Working |
 | Google / GitHub OAuth cloud sync | Working |
-| Guardian Sync UI (`/guardian-sync`) | Working |
+| Google Drive API hybrid cloud sync backend | Working |
+| Guardian Sync UI (`/guardian-sync`) + Android E2E sync screen | Working |
 | Network learning + art triage (`/network-learning`) | Working |
+| Training vault migrate (`POST /training/migrate`, dry_run default) | Working |
 | Grok-supervised learning (`/api/guardian/learning/supervise`) | Working |
+| Self-heal watchdog + safe git snapshots (skips secrets) | Working |
+| Manuscript / diary Discord share (PR-C/D/E) | Working |
 | Hardcoded disclaimer with toddler learning notice | Working |
 
 ## Guardian Ai — Core APIs
@@ -55,11 +59,14 @@ See [`deploy/guardian/ARCHITECTURE.md`](deploy/guardian/ARCHITECTURE.md) · [`MA
 | `POST /api/guardian/sync/download` | Cross-device restore (Google/GitHub + passphrase) |
 | `POST /api/guardian/errors/report` | Auto error + fix suggestions |
 | `POST /api/guardian/backstory/generate` | Enhanced OC backstory (fingerprint gate + multimodal) |
-| `POST /api/guardian/oc/protect` | OC fingerprint + `GDA-` watermark |
+| `POST /api/guardian/oc/protect` | OC fingerprint + `MGA-` watermark |
 | `GET /api/guardian/connection` | Tunnel URL + USB APK info |
 | `GET /api/guardian/training/status` | Encrypted training vault (`plaintext_forbidden`) |
 | `POST /api/guardian/training/migrate` | Encrypt legacy plaintext good/bad images |
 | `GET /api/guardian/network-learning/status` | Autonomous network learning (opt-in) |
+| `POST /api/guardian/learning/eternal-tick` | Eternal cycle: network learn → Grok supervise → toddler |
+| `GET /api/guardian/firewall/status` | Self-healing firewall + quarantine + voice harassment |
+| `POST /api/guardian/security/voice-fingerprint` | Cross-number voice harassment detection |
 | `POST /api/guardian/quality/gate` | Quality gate — score &lt; 70% = failure |
 
 ### Toddler-style learning
@@ -87,8 +94,8 @@ Docs: [`MASTER_SPEC_20260901.md`](deploy/guardian/MASTER_SPEC_20260901.md) · [`
 
 | Repo | Language | Clone |
 |------|----------|-------|
-| [SB00001090/Guardian-Ai](https://github.com/SB00001090/Guardian-Ai) | English README | `gh repo clone SB00001090/Guardian-Ai` |
-| [SB00001090/Monster-Ai-ZH-TW](https://github.com/SB00001090/Monster-Ai-ZH-TW) | Traditional Chinese README | `gh repo clone SB00001090/Monster-Ai-ZH-TW` |
+| [SB00001090/Guardian-Ai](https://github.com/SB00001090/Guardian-Ai) | English README (main) | `gh repo clone SB00001090/Guardian-Ai` |
+| [SB00001090/Monster-Ai-ZH-TW](https://github.com/SB00001090/Monster-Ai-ZH-TW) | Traditional Chinese README (zh-TW) | `gh repo clone SB00001090/Monster-Ai-ZH-TW` |
 
 Without GitHub CLI: `git clone https://github.com/SB00001090/Guardian-Ai.git` or `git clone https://github.com/SB00001090/Monster-Ai-ZH-TW.git`
 

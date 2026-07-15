@@ -61,13 +61,17 @@ run.bat
 | **Guardian Ai**（E2E 同步、OC 指紋、幼兒式學習、錯誤學習） | 可用 |
 | Cloudflare Tunnel + USB APK 安裝（無需 Tailscale / QR） | 可用 |
 | Google / GitHub OAuth 雲端同步 | 可用 |
-| Guardian 同步 UI（`/guardian-sync`） | 可用 |
+| Google Drive API 混合雲端同步後端 | 可用 |
+| Guardian 同步 UI（`/guardian-sync`）+ Android E2E 同步畫面 | 可用 |
 | Grok 監督式學習（`/api/guardian/learning/supervise`） | 可用 |
-| **自主網絡學習**（`/network-learning`、Grok 審批） | 可用 |
-| **藝術品質分診**（art triage，加密訓練庫） | 可用 |
+| **自主網絡學習**（`/network-learning`、Grok 審批／拒絕紀錄） | 可用 |
+| **藝術品質分診**（art-triage → 加密訓練庫） | 可用 |
+| **加密訓練庫遷移**（`POST /training/migrate`，預設 dry_run） | 可用 |
 | **幼兒教育式學習**（`/toddler-learning`） | 可用 |
+| 自我修復 watchdog + 安全 git 快照（略過 secrets） | 可用 |
+| Manuscript / Diary Discord 分享（PR-C/D/E） | 可用 |
 | **Guardian Ai Android**（`apps/guardian-ai-android`） | 可用 |
-| 硬編碼免責聲明（含幼兒學習提醒） | 可用 |
+| 硬編碼免責聲明（含幼兒教育式學習提醒） | 可用 |
 
 ## Guardian Ai — 核心 API
 
@@ -79,7 +83,7 @@ run.bat
 | `POST /api/guardian/sync/download` | 跨裝置還原 |
 | `POST /api/guardian/errors/report` | 自動錯誤回報 + 修復建議 |
 | `POST /api/guardian/backstory/generate` | 增強 OC 背景故事（指紋閘門 + 多模態） |
-| `POST /api/guardian/oc/protect` | OC 指紋 + `GDA-` 浮水印 |
+| `POST /api/guardian/oc/protect` | OC 指紋 + `MGA-` 浮水印 |
 | `GET /api/guardian/connection` | Tunnel URL + USB APK 資訊 |
 | `GET /api/guardian/training/status` | 加密訓練庫狀態 |
 | `POST /api/guardian/training/migrate` | 加密舊版明文 good/bad 圖像 |

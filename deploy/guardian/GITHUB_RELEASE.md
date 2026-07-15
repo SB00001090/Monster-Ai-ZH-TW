@@ -24,7 +24,7 @@ Guardian Ai v{VERSION}
 - 幼兒教育式學習系統 — 由淺入深、正面鼓勵、溫和糾正
 - Grok 監督整個學習週期（`/api/guardian/learning/supervise`）
 - 自主網絡學習 + 藝術品質分診（好圖 / 爛圖 / 真藝術）
-- OC 反抄襲指紋 + `GDA-` 不可見浮水印
+- OC 反抄襲指紋 + `MGA-` 不可見浮水印
 - 訓練檔案全面 AES-256-GCM 加密（`.mgtrain`，禁止明文）
 - E2E 雲端同步（Google / GitHub OAuth + passphrase）
 - 硬編碼免責聲明（含幼兒學習提醒、無法退款條款）
@@ -40,8 +40,8 @@ Guardian Ai v{VERSION}
 | 平台 | 方式 |
 |------|------|
 | 桌面 | `run.bat` → http://127.0.0.1:7860 |
-| 遠端 | Cloudflare Tunnel — `scripts\callguard\run-tunnel.bat`，手動貼上 HTTPS URL |
-| Android | GitHub Releases APK + USB `scripts\callguard\install-apk-adb.ps1` |
+| 遠端 | Cloudflare Tunnel — `scripts\guardian\run-tunnel.bat`，手動貼上 HTTPS URL |
+| Android | GitHub Releases APK + USB `scripts\guardian\install-apk-adb.ps1` |
 
 ### 商業模式
 

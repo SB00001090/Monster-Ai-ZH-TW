@@ -85,12 +85,22 @@ App Error → Sentry (optional) + tRPC errors.reportClientError
          → Grok supervise (recurring patterns)
 ```
 
-## 3. 學習系統
+## 3. 學習系統（幼兒教育式 + 自主網絡學習）
 
 - `FailureAnalyzer` — 品質 < 70% 失敗模式
 - `ErrorLearningStore` — 運行時錯誤案例
-- `GrokSupervisor` — 規則 + LLM 策略指導
+- `GrokSupervisor` — 規則 + LLM 策略指導（審批／拒絕皆寫入 `network_directives.jsonl`）
+- `ToddlerLearning` — 幼兒教育式漸進學習（鼓勵優先、溫和糾正）
+- `GuardianNetworkLearner` — 自主網絡學習（opt-in + Grok 審批 + 時段窗）
+- `ArtTriageEngine` — 藝術品質分診 → 加密訓練庫（`.mgtrain`）
 - Curriculum mode `cybersec` — 安全主題訓練
+- Eternal tick：`POST /api/guardian/learning/eternal-tick`（network → supervise → toddler）
+
+## 3.1 自我修復與 Git 快照
+
+- `SelfHealOrchestrator` + `Watchdog`（Ollama / ComfyUI / 日誌錯誤）
+- `SnapshotManager`：`repair/{timestamp}` 分支 + `snapshot/pre-commit-*` 標籤
+- **禁止**盲目 `git add -A`：僅 stage 安全路徑，略過 `.env` / `config.yaml` / token / keystore
 
 ## 4. 聊天區安全
 
@@ -120,6 +130,10 @@ App Error → Sentry (optional) + tRPC errors.reportClientError
 | POST | `/api/guardian/sync/download` | E2E 下載 |
 | POST | `/api/guardian/errors/report` | 錯誤學習 |
 | POST | `/api/guardian/learning/supervise` | Grok 監督 |
-| POST | `/api/guardian/oc/protect` | OC 指紋 |
+| POST | `/api/guardian/learning/eternal-tick` | 永續學習一輪 |
+| POST | `/api/guardian/oc/protect` | OC 反抄襲指紋 |
 | POST | `/api/guardian/quality/gate` | 70% 門檻 |
 | GET | `/api/guardian/connection` | Tunnel + USB 資訊 |
+| POST | `/api/guardian/training/migrate` | 明文→加密訓練庫（預設 dry_run） |
+| GET | `/api/guardian/network-learning/status` | 自主網絡學習狀態 |
+| POST | `/api/guardian/network-learning/art-triage/run` | 藝術品質分診 |
