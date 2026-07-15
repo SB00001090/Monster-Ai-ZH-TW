@@ -1,4 +1,4 @@
-﻿# Publish Guardian Ai full tree + Traditional Chinese README to Monster-Ai-ZH-TW
+﻿# Publish Guardian Ai full tree + Traditional Chinese README to Guardian-Ai-ZH-TW
 $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $PSScriptRoot
@@ -24,7 +24,7 @@ try {
         git commit -m "docs(zh-TW): Guardian Ai Traditional Chinese README sync"
     }
     git push zh-tw HEAD:main --force-with-lease
-    Write-Host "Pushed to https://github.com/SB00001090/Monster-Ai-ZH-TW"
+    Write-Host "Pushed to https://github.com/SB00001090/Guardian-Ai-ZH-TW"
     if ($status) {
         git reset --hard HEAD~1
     }
@@ -36,4 +36,4 @@ try {
     Pop-Location
 }
 
-Write-Host "English README restored. Clone: gh repo clone SB00001090/Monster-Ai-ZH-TW"
+Write-Host "English README restored. Clone: gh repo clone SB00001090/Guardian-Ai-ZH-TW"

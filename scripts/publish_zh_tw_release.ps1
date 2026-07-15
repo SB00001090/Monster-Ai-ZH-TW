@@ -1,4 +1,4 @@
-# Publish release to Monster-Ai-ZH-TW
+# Publish release to Guardian-Ai-ZH-TW
 $ErrorActionPreference = "Stop"
 $credInput = "protocol=https`nhost=github.com`n`n"
 $credOutput = $credInput | git credential fill 2>$null
@@ -26,10 +26,10 @@ $payload = $payloadObj | ConvertTo-Json
 
 $rel = $null
 try {
-    $rel = Invoke-RestMethod -Uri "https://api.github.com/repos/SB00001090/Monster-Ai-ZH-TW/releases/tags/v1.3.1" -Headers $headers
+    $rel = Invoke-RestMethod -Uri "https://api.github.com/repos/SB00001090/Guardian-Ai-ZH-TW/releases/tags/v1.3.1" -Headers $headers
     Write-Host "Release already exists: $($rel.html_url)"
 } catch {
-    $rel = Invoke-RestMethod -Uri "https://api.github.com/repos/SB00001090/Monster-Ai-ZH-TW/releases" -Method Post -Headers $headers -Body $payload -ContentType "application/json"
+    $rel = Invoke-RestMethod -Uri "https://api.github.com/repos/SB00001090/Guardian-Ai-ZH-TW/releases" -Method Post -Headers $headers -Body $payload -ContentType "application/json"
     Write-Host "Created release: $($rel.html_url)"
 }
 
@@ -44,7 +44,7 @@ Invoke-WebRequest -Uri $apkUrl -OutFile $apkPath
 Invoke-WebRequest -Uri $shaUrl -OutFile $shaPath
 
 function Upload-Asset([string]$FilePath, [string]$Name) {
-    $uploadUrl = "https://uploads.github.com/repos/SB00001090/Monster-Ai-ZH-TW/releases/$($rel.id)/assets?name=$Name"
+    $uploadUrl = "https://uploads.github.com/repos/SB00001090/Guardian-Ai-ZH-TW/releases/$($rel.id)/assets?name=$Name"
     $uploadHeaders = @{
         Authorization = "Bearer $token"
         Accept = "application/vnd.github+json"

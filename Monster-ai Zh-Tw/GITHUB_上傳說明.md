@@ -1,8 +1,8 @@
-# Monster-Ai-ZH-TW GitHub 上傳說明
+# Guardian-Ai-ZH-TW GitHub 上傳說明
 
 本資料夾為 **繁體中文版** 的本地工作副本，對應遠端：
 
-**https://github.com/SB00001090/Monster-Ai-ZH-TW**
+**https://github.com/SB00001090/Guardian-Ai-ZH-TW**
 
 英文主倉庫（origin）：
 
@@ -12,8 +12,8 @@
 
 ```bash
 # 繁體中文 Repo（建議）
-gh repo clone SB00001090/Monster-Ai-ZH-TW
-cd Monster-Ai-ZH-TW
+gh repo clone SB00001090/Guardian-Ai-ZH-TW
+cd Guardian-Ai-ZH-TW
 
 # 英文主 Repo
 gh repo clone SB00001090/Guardian-Ai
@@ -22,7 +22,7 @@ gh repo clone SB00001090/Guardian-Ai
 或使用 git：
 
 ```bash
-git clone https://github.com/SB00001090/Monster-Ai-ZH-TW.git
+git clone https://github.com/SB00001090/Guardian-Ai-ZH-TW.git
 git clone https://github.com/SB00001090/Guardian-Ai.git
 ```
 
@@ -45,7 +45,7 @@ git clone https://github.com/SB00001090/Guardian-Ai.git
 
 ---
 
-## 二、推送到 Monster-Ai-ZH-TW（zh-tw 遠端）
+## 二、推送到 Guardian-Ai-ZH-TW（zh-tw 遠端）
 
 在 **專案根目錄**（`C:\MonsterAI\monster-ai`）執行：
 
@@ -71,7 +71,7 @@ Copy-Item -Force "Monster-ai Zh-Tw\README.md" "README.md"
 
 # 3. 提交並推送 zh-tw
 git add README.md
-git commit -m "docs(zh-TW): update README for Monster-Ai-ZH-TW"
+git commit -m "docs(zh-TW): update README for Guardian-Ai-ZH-TW"
 git push zh-tw main
 
 # 4. 還原英文 README（從 git 取回）
@@ -86,7 +86,7 @@ git checkout HEAD -- README.md
 .\scripts\publish_zh_tw_release.ps1
 ```
 
-會在 **Monster-Ai-ZH-TW** 建立或更新 `v1.3.1` Release，並上傳 APK 與 SHA256 校驗檔。
+會在 **Guardian-Ai-ZH-TW** 建立或更新 `v1.3.1` Release，並上傳 APK 與 SHA256 校驗檔。
 
 ---
 
@@ -101,12 +101,12 @@ git remote -v
 | 遠端 | URL |
 |------|-----|
 | `origin` | `https://github.com/SB00001090/Guardian-Ai.git` |
-| `zh-tw` | `https://github.com/SB00001090/Monster-Ai-ZH-TW.git` |
+| `zh-tw` | `https://github.com/SB00001090/Guardian-Ai-ZH-TW.git` |
 
 若缺少 `zh-tw`：
 
 ```powershell
-git remote add zh-tw https://github.com/SB00001090/Monster-Ai-ZH-TW.git
+git remote add zh-tw https://github.com/SB00001090/Guardian-Ai-ZH-TW.git
 ```
 
 ---
