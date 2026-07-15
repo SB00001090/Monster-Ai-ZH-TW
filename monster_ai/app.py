@@ -220,13 +220,39 @@ async def lifespan(app: FastAPI):
 
         async def _network_learning_daemon() -> None:
             while True:
-                await asyncio.sleep(interval)
                 try:
-                    await guardian.network_learning.trigger(force=False)
+                    await asyncio.sleep(0)  # yield for Discord interactions
+                    await guardian.eternal_learning_tick()
+                    await asyncio.sleep(0)
                 except Exception:  # noqa: BLE001
-                    logger.exception("network learning daemon tick failed")
+                    logger.exception("eternal learning daemon tick failed")
+                await asyncio.sleep(interval)
 
         nl_daemon_task = asyncio.create_task(_network_learning_daemon())
+        logger.info(
+            "Eternal network learning daemon started (interval=%ss, continuous=%s)",
+            interval,
+            nl_settings.eternal_continuous,
+        )
+
+    curriculum_resume_task: asyncio.Task | None = None
+    learning = getattr(app.state, "learning", None)
+    if learning is not None:
+        async def _resume_curriculum() -> None:
+            # Delay so Discord gateway + slash sync finish first (avoids 10062 under load)
+            try:
+                await asyncio.sleep(45)
+                result = await learning.resume_curriculum_if_needed()
+                if result.get("ok"):
+                    logger.info("Curriculum auto-resumed (after settle): %s", result.get("message"))
+                else:
+                    logger.info("Curriculum auto-resume skipped: %s", result.get("reason"))
+            except asyncio.CancelledError:
+                raise
+            except Exception:  # noqa: BLE001
+                logger.exception("curriculum auto-resume failed")
+
+        curriculum_resume_task = asyncio.create_task(_resume_curriculum())
 
     yield
 
@@ -234,6 +260,13 @@ async def lifespan(app: FastAPI):
         nl_daemon_task.cancel()
         try:
             await nl_daemon_task
+        except asyncio.CancelledError:
+            pass
+
+    if curriculum_resume_task is not None:
+        curriculum_resume_task.cancel()
+        try:
+            await curriculum_resume_task
         except asyncio.CancelledError:
             pass
 
@@ -247,6 +280,9 @@ async def lifespan(app: FastAPI):
 
 
 def create_app(settings: Settings) -> FastAPI:
+    from monster_ai.env_file import load_dotenv
+
+    load_dotenv()
     _ensure_data_dirs()
     _bootstrap_tunnel_env(settings)
     _setup_file_logging()
@@ -353,6 +389,11 @@ def create_app(settings: Settings) -> FastAPI:
     self_heal = SelfHealOrchestrator(settings.repair.orchestrator, root)
 
     chat = ChatService(repair, settings, learning=learning)
+    from monster_ai.modules.image.likeness_scorer import FaceLikenessScorer
+
+    likeness_scorer = FaceLikenessScorer(
+        target_similarity=settings.guardian.likeness_target_similarity,
+    )
     image = ImageService(
         settings,
         repair,
@@ -365,6 +406,8 @@ def create_app(settings: Settings) -> FastAPI:
         prompt_refiner,
         history=history,
         image_learner=image_learner,
+        guardian_svc=guardian_svc,
+        likeness_scorer=likeness_scorer,
     )
     roleplay = RoleplayService(
         settings, repair, image_service=image, history=history, learning=learning

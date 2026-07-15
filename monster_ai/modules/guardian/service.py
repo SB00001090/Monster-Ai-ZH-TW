@@ -13,7 +13,14 @@ from monster_ai.modules.guardian.disclaimer import DEVELOPER, get_disclaimer
 from monster_ai.modules.guardian.error_learning import ErrorLearningStore
 from monster_ai.modules.guardian.grok_supervisor import GrokSupervisor
 from monster_ai.modules.guardian.key_manager import TrainingKeyManager
-from monster_ai.modules.guardian.oc_fingerprint import OCFingerprintStore, embed_watermark, generate_fingerprint
+from monster_ai.modules.guardian.image_fingerprint import ImageFingerprintStore
+from monster_ai.modules.guardian.oc_fingerprint import (
+    OCFingerprintStore,
+    _canonical_oc,
+    embed_watermark,
+    generate_fingerprint,
+)
+from monster_ai.modules.guardian.vector_memory import VectorMemoryStore
 from monster_ai.modules.guardian.account_store import AccountStore
 from monster_ai.modules.guardian.backstory import BackstoryGenerator
 from monster_ai.modules.guardian.art_triage import ArtTriageEngine
@@ -22,6 +29,7 @@ from monster_ai.modules.guardian.discord_reporter import send_discord_error_repo
 from monster_ai.modules.guardian.manuscript_store import ManuscriptStore
 from monster_ai.modules.guardian.network_learning import GuardianNetworkLearner
 from monster_ai.modules.guardian.share_store import ShareStore
+from monster_ai.modules.guardian.success_tracker import GuardianSuccessTracker
 from monster_ai.modules.guardian.toddler_learning import ToddlerLearningEngine
 from monster_ai.modules.guardian.training_vault import TrainingVault
 
@@ -56,11 +64,14 @@ class GuardianService:
         )
         self.vault = ChatVault(root)
         self.oc_store = OCFingerprintStore(root)
+        self.image_fingerprints = ImageFingerprintStore(root)
+        self.vector_memory = VectorMemoryStore(root)
         self.manuscripts = ManuscriptStore(root)
         self.diaries = DiaryStore(root)
         self.shares = ShareStore(root)
         self.accounts = AccountStore(root)
         self.errors = ErrorLearningStore(root)
+        self.success_tracker = GuardianSuccessTracker(root)
         self.supervisor = GrokSupervisor(root, repair)
         self.toddler = ToddlerLearningEngine(root, self.supervisor)
         self.backstory = BackstoryGenerator(self.oc_store)
@@ -96,12 +107,15 @@ class GuardianService:
             "manuscript_versions": True,
             "diary_encryption": True,
             "character_share": True,
+            "vector_memory": True,
+            "image_phash": True,
             "discord_binding": "discord" in self.settings.oauth_providers,
             "connection_policy": "tunnel_or_usb_only",
             "no_tailscale": True,
             "no_qr_code": True,
             "connection_mode": "cloudflare_tunnel",
             "toddler_learning": self.toddler.status(),
+            "generation_success": self.success_tracker.status(),
             "training_encryption": self.settings.training_encryption_enabled,
             "training_vault": self.training_vault.status() if self.training_vault else None,
             "network_learning": (
@@ -138,7 +152,12 @@ class GuardianService:
         self.key_manager.lock()
         return {"ok": True, "locked": True}
 
-    def migrate_training_assets(self, quality_data_dir: Path) -> dict[str, Any]:
+    def migrate_training_assets(
+        self,
+        quality_data_dir: Path,
+        *,
+        dry_run: bool = False,
+    ) -> dict[str, Any]:
         if self.training_vault is None:
             return {"ok": False, "reason": "training_vault_disabled"}
         base = Path(quality_data_dir)
@@ -147,10 +166,18 @@ class GuardianService:
             r = self.training_vault.migrate_plaintext_dir(
                 base / label,
                 label=label,
-                delete_plaintext=self.settings.delete_plaintext_after_encrypt,
+                delete_plaintext=self.settings.delete_plaintext_after_encrypt and not dry_run,
+                dry_run=dry_run,
             )
             results.append(r)
-        return {"ok": True, "migrated": results}
+        total = sum(int(r.get("migrated") or 0) for r in results)
+        return {
+            "ok": True,
+            "dry_run": dry_run,
+            "total_migrated": total,
+            "migrated": results,
+            "hint": "dry_run 僅預覽；設 dry_run=false 才會寫入加密訓練庫並依設定刪除明文",
+        }
 
     def export_training_for_sync(self) -> dict[str, Any]:
         if self.training_vault is None:
@@ -177,6 +204,33 @@ class GuardianService:
             "toddler": toddler.get("status"),
         }
 
+    def record_generation(
+        self,
+        *,
+        ok: bool,
+        backend: str = "unknown",
+        quality_score: float | None = None,
+        likeness_score: float | None = None,
+        guardian_gate_passed: bool | None = None,
+        issues: list[str] | None = None,
+        repair_attempts: int = 0,
+        character_id: str | None = None,
+    ) -> dict[str, Any]:
+        self.success_tracker.record(
+            ok=ok,
+            backend=backend,
+            quality_score=quality_score,
+            likeness_score=likeness_score,
+            guardian_gate_passed=guardian_gate_passed,
+            issues=issues,
+            repair_attempts=repair_attempts,
+            character_id=character_id,
+        )
+        return self.success_tracker.status()
+
+    def generation_success_status(self) -> dict[str, Any]:
+        return self.success_tracker.status()
+
     def toddler_status(self) -> dict[str, Any]:
         return self.toddler.status()
 
@@ -188,6 +242,17 @@ class GuardianService:
 
     def toddler_positive_feedback(self, *, reason: str = "user_praise") -> dict[str, Any]:
         return self.toddler.record_positive_feedback(reason=reason)
+
+    async def eternal_learning_tick(self) -> dict[str, Any]:
+        """One eternal background cycle: network learn → Grok supervise → toddler progress."""
+        if self.network_learning is None:
+            return {"ok": False, "reason": "network_learning_not_attached"}
+        run = await self.network_learning.trigger(eternal=True)
+        out: dict[str, Any] = {"ok": bool(run.get("ok")), "run": run}
+        if run.get("ok"):
+            out["supervision"] = await self.supervise_learning()
+            out["toddler"] = await self.toddler_progress()
+        return out
 
     async def generate_backstory(
         self,
@@ -225,6 +290,18 @@ class GuardianService:
     def protect_oc(self, card: dict[str, Any], *, owner_id: str = "local") -> dict[str, Any]:
         if not self.settings.oc_fingerprint_enabled:
             return {"ok": True, "protected": False, "card": card}
+        import hashlib
+
+        content_hash = hashlib.sha256(_canonical_oc(card).encode()).hexdigest()
+        collision = self.oc_store.find_similar_for_owner(content_hash, owner_id=owner_id)
+        if collision:
+            return {
+                "ok": False,
+                "blocked": True,
+                "reason": "similar_oc_exists",
+                "collision_owner": collision.get("owner_id"),
+                "watermark": collision.get("watermark"),
+            }
         record = generate_fingerprint(card, owner_id=owner_id)
         char_id = str(card.get("id") or card.get("name") or "oc")
         self.oc_store.save(char_id, record)
@@ -451,8 +528,94 @@ class GuardianService:
             passphrase=passphrase,
         )
 
+    def share_preview(self, *, token: str) -> dict[str, Any]:
+        return self.shares.preview_share(token=token)
+
     def share_import(self, *, token: str, passphrase: str) -> dict[str, Any]:
-        return self.shares.import_share(token=token, passphrase=passphrase)
+        result = self.shares.import_share(token=token, passphrase=passphrase)
+        if not result.get("ok"):
+            return result
+        fp = result.get("fingerprint") if isinstance(result.get("fingerprint"), dict) else {}
+        content_hash = fp.get("content_hash")
+        owner_id = str(result.get("owner_id") or "")
+        collision = None
+        if content_hash:
+            collision = self.oc_store.find_similar_for_owner(content_hash, owner_id=owner_id)
+        if collision:
+            result["originality_check"] = {
+                "passed": False,
+                "reason": "similar_oc_registered",
+                "collision_owner": collision.get("owner_id"),
+            }
+        else:
+            result["originality_check"] = {"passed": True}
+        return result
+
+    def register_image_fingerprint(
+        self,
+        *,
+        character_id: str,
+        owner_id: str,
+        image_path: Path,
+    ) -> dict[str, Any]:
+        return self.image_fingerprints.register(
+            character_id=character_id,
+            owner_id=owner_id,
+            image_path=image_path,
+        )
+
+    def check_image_fingerprint(
+        self,
+        image_path: Path,
+        *,
+        owner_id: str = "local",
+    ) -> dict[str, Any]:
+        return self.image_fingerprints.check_before_generation(image_path, owner_id=owner_id)
+
+    def memory_remember(
+        self,
+        character_id: str,
+        *,
+        text: str,
+        vault_key: str,
+        role: str = "assistant",
+        session_id: str | None = None,
+    ) -> dict[str, Any]:
+        return self.vector_memory.remember(
+            character_id,
+            text=text,
+            vault_passphrase=vault_key,
+            role=role,
+            session_id=session_id,
+        )
+
+    def memory_recall(
+        self,
+        character_id: str,
+        *,
+        query: str,
+        vault_key: str,
+        top_k: int = 5,
+    ) -> dict[str, Any]:
+        return self.vector_memory.recall(
+            character_id,
+            query=query,
+            vault_passphrase=vault_key,
+            top_k=top_k,
+        )
+
+    def memory_list(
+        self,
+        character_id: str,
+        *,
+        vault_key: str,
+        limit: int = 20,
+    ) -> dict[str, Any]:
+        return self.vector_memory.list_memories(
+            character_id,
+            vault_passphrase=vault_key,
+            limit=limit,
+        )
 
     def share_list(self, owner_id: str) -> dict[str, Any]:
         return {"ok": True, "shares": self.shares.list_by_owner(owner_id)}

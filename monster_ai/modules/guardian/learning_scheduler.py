@@ -56,13 +56,18 @@ class LearningScheduler:
         enabled: bool,
         last_run_at: float | None,
         force: bool = False,
+        eternal: bool = False,
         now: datetime | None = None,
     ) -> tuple[bool, str]:
         if not enabled:
             return False, "network_learning_disabled"
         if not consented:
             return False, "consent_required"
-        if force:
+        if force or eternal:
+            if last_run_at is not None and eternal and not force:
+                age_h = (datetime.now(timezone.utc).timestamp() - last_run_at) / 3600
+                if age_h < self.min_hours_between_runs:
+                    return False, "cooldown_active"
             return True, ""
         if not self.in_window(now):
             return False, "outside_schedule_window"

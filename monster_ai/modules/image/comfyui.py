@@ -23,9 +23,15 @@ from monster_ai.modules.image.model_presets import (
     resolve_style_preset,
 )
 from monster_ai.modules.image.lora_manager import list_loras, resolve_lora
+from monster_ai.modules.image.likeness_scorer import FaceLikenessScorer
 from monster_ai.modules.image.quality import ImageQualityScorer
 from monster_ai.modules.image.quality_store import QualityStore
-from monster_ai.modules.generation.router import GenerationRouter
+from monster_ai.modules.generation.router import (
+    GenerationRouter,
+    QUALITY_REPAIR_THRESHOLD,
+    next_repair_backend,
+    next_repair_vae,
+)
 from monster_ai.modules.image.workflow_builder import build_txt2img_workflow, pick_workflow_template
 from monster_ai.modules.prompt.anti_collapse import build_negative, suggest_cfg
 from monster_ai.modules.prompt.enhancer import PromptEnhancer
@@ -157,12 +163,16 @@ class ImageService:
         prompt_refiner: PromptRefiner | None = None,
         history: GenerationHistory | None = None,
         image_learner: Any | None = None,
+        guardian_svc: Any | None = None,
+        likeness_scorer: FaceLikenessScorer | None = None,
     ) -> None:
         self.settings = settings
         self.repair = repair
         self.gen_repair = gen_repair
         self.vram_guard = vram_guard
         self.prompt_enhancer = prompt_enhancer
+        self.guardian_svc = guardian_svc
+        self.likeness_scorer = likeness_scorer
         self.quality_scorer = quality_scorer or ImageQualityScorer(settings.modules.image.quality)
         self.quality_store = quality_store or QualityStore(
             settings.modules.image.quality.data_dir, settings.modules.image.quality
@@ -230,6 +240,9 @@ class ImageService:
         cfg: float,
         lora_name: str | None,
         lora_strength: float,
+        vae_name: str | None = None,
+        workflow_template: str | None = None,
+        upscale_factor: float = 1.0,
     ) -> Path:
         async with self.vram_guard.acquire("image"):
             workflow = build_txt2img_workflow(
@@ -242,6 +255,9 @@ class ImageService:
                 cfg=cfg,
                 lora_name=lora_name,
                 lora_strength=lora_strength,
+                vae_name=vae_name,
+                workflow_template=workflow_template,
+                upscale_factor=upscale_factor,
             )
             prompt_id = await self.client.queue_prompt(workflow)
             images = await self.client.wait_for_images(prompt_id)
@@ -268,6 +284,9 @@ class ImageService:
         record_history: bool = True,
         steps: int | None = None,
         cfg: float | None = None,
+        owner_id: str | None = None,
+        character_id: str | None = None,
+        reference_image: str | Path | None = None,
     ) -> dict[str, Any]:
         if not self.settings.modules.image.enabled:
             raise RuntimeError("Image module disabled")
@@ -289,9 +308,13 @@ class ImageService:
         route_meta: dict[str, Any] | None = None
         routed_w: int | None = None
         routed_h: int | None = None
+        gen_router = generation_router or GenerationRouter()
+        active_backend_id = backend
+        active_vae_name = vae
+        workflow_template: str | None = None
+        upscale_factor = 1.0
 
-        if backend or vae:
-            gen_router = generation_router or GenerationRouter()
+        if backend or vae or width or height:
             route_meta = gen_router.resolve(
                 backend_id=backend,
                 vae=vae,
@@ -309,6 +332,13 @@ class ImageService:
                 warning = route_meta.get("warning") or ckpt_warn
             routed_w = route_meta.get("width")
             routed_h = route_meta.get("height")
+            active_backend_id = route_meta.get("backend")
+            active_vae_name = route_meta.get("vae")
+            workflow_template = route_meta.get("workflow_template")
+            upscale_factor = float(route_meta.get("upscale_factor") or 1.0)
+            if route_meta.get("latent_upscale"):
+                routed_w = route_meta.get("native_width")
+                routed_h = route_meta.get("native_height")
         elif checkpoint:
             resolved_ckpt, ckpt_warn = await self.client.resolve_checkpoint_name(checkpoint)
             warning = ckpt_warn
@@ -348,6 +378,17 @@ class ImageService:
         quality_attempts = 0
         escalated = False
         gen_attempt_state = {"n": 0}
+        guardian_pipeline: dict[str, Any] = {}
+        ref_path = Path(reference_image) if reference_image else None
+        use_likeness = bool(
+            ref_path
+            and ref_path.is_file()
+            and self.likeness_scorer is not None
+            and (
+                self.guardian_svc is None
+                or getattr(self.guardian_svc.settings, "likeness_enabled", True)
+            )
+        )
 
         async def _run_comfy() -> Path:
             nonlocal active_ckpt, positive, neg, steps, cfg, w, h, active_lora, escalated
@@ -374,6 +415,9 @@ class ImageService:
                 cfg=cfg,
                 lora_name=use_lora_attempt,
                 lora_strength=use_strength,
+                vae_name=active_vae_name,
+                workflow_template=workflow_template,
+                upscale_factor=upscale_factor,
             )
 
         async def _on_gen_retry(attempt: int, _exc: Exception) -> None:
@@ -397,7 +441,37 @@ class ImageService:
             last_report = report
             self.gen_repair.state.last_quality_score = report.score
 
-            if report.passed:
+            gate_ok = True
+            likeness_ok = True
+            if self.guardian_svc and self.guardian_svc.settings.enabled:
+                gate = self.guardian_svc.quality_gate(report.score)
+                guardian_pipeline["quality_gate"] = gate
+                gate_ok = gate.get("passed", False)
+
+            if use_likeness and ref_path is not None:
+                likeness = self.likeness_scorer.compare(ref_path, path)
+                guardian_pipeline["likeness"] = likeness
+                likeness_ok = likeness.get("passed", False)
+
+            if (
+                report.passed
+                and report.score >= QUALITY_REPAIR_THRESHOLD
+                and gate_ok
+                and likeness_ok
+            ):
+                if (
+                    self.guardian_svc
+                    and self.guardian_svc.settings.enabled
+                    and character_id
+                    and owner_id
+                ):
+                    guardian_pipeline["image_fingerprint"] = (
+                        self.guardian_svc.register_image_fingerprint(
+                            character_id=character_id,
+                            owner_id=owner_id,
+                            image_path=path,
+                        )
+                    )
                 self.image_repair.record_quality_pass()
                 self.gen_repair.state.quality_fail_streak = 0
                 self.quality_store.save_good(
@@ -423,6 +497,39 @@ class ImageService:
 
             self.image_repair.record_quality_fail()
             self.gen_repair.state.quality_fail_streak += 1
+
+            if report.score < QUALITY_REPAIR_THRESHOLD and route_meta:
+                alt_vae = next_repair_vae(
+                    str(active_backend_id or route_meta.get("backend", "sd15")),
+                    str(active_vae_name or route_meta.get("vae", "")),
+                )
+                if alt_vae and alt_vae != active_vae_name:
+                    active_vae_name = alt_vae
+                    route_meta["vae"] = alt_vae
+                    workflow_template = "latent_upscale_txt2img"
+                    self.image_repair.state.last_escalation = f"vae_switch:{alt_vae}"
+                else:
+                    alt_backend = next_repair_backend(str(active_backend_id))
+                    if alt_backend:
+                        active_backend_id = alt_backend
+                        route_meta = gen_router.resolve(
+                            backend_id=alt_backend,
+                            vae=None,
+                            width=route_meta.get("width"),
+                            height=route_meta.get("height"),
+                            available_checkpoints=available_ckpts,
+                        )
+                        active_vae_name = route_meta.get("vae")
+                        workflow_template = route_meta.get("workflow_template")
+                        upscale_factor = float(route_meta.get("upscale_factor") or 1.0)
+                        if route_meta.get("latent_upscale"):
+                            w = int(route_meta.get("native_width") or w)
+                            h = int(route_meta.get("native_height") or h)
+                        new_ckpt = route_meta.get("checkpoint")
+                        if new_ckpt:
+                            active_ckpt, _ = await self.client.resolve_checkpoint_name(new_ckpt)
+                        self.image_repair.state.last_escalation = f"backend_switch:{alt_backend}"
+
             self.quality_store.save_bad(
                 path,
                 prompt=positive,
@@ -552,13 +659,21 @@ class ImageService:
             result["warning"] = warning
         if route_meta:
             result["routing"] = {
-                "backend": route_meta.get("backend"),
-                "vae": route_meta.get("vae"),
+                "backend": active_backend_id or route_meta.get("backend"),
+                "vae": active_vae_name or route_meta.get("vae"),
                 "width": route_meta.get("width"),
                 "height": route_meta.get("height"),
+                "native_width": route_meta.get("native_width"),
+                "native_height": route_meta.get("native_height"),
+                "workflow_template": workflow_template,
                 "upscale_recommended": route_meta.get("upscale_recommended"),
+                "latent_upscale": route_meta.get("latent_upscale"),
+                "upscale_factor": upscale_factor,
+                "quality_repair_threshold": QUALITY_REPAIR_THRESHOLD,
                 "resolution_policy": route_meta.get("resolution_policy"),
             }
+        if guardian_pipeline:
+            result["guardian"] = guardian_pipeline
         if use_quality and last_report:
             result["quality"] = {
                 **last_report.to_dict(),
@@ -576,6 +691,29 @@ class ImageService:
                     (result.get("warning") or "")
                     + " quality_filter_exhausted — best attempt returned"
                 ).strip()
+        if self.guardian_svc and self.guardian_svc.settings.enabled:
+            gate = guardian_pipeline.get("quality_gate") if guardian_pipeline else None
+            likeness = guardian_pipeline.get("likeness") if guardian_pipeline else None
+            gate_passed = gate.get("passed") if isinstance(gate, dict) else None
+            likeness_passed = likeness.get("passed") if isinstance(likeness, dict) else True
+            quality_ok = (not use_quality) or (last_report is not None and last_report.passed)
+            gen_ok = bool(
+                quality_ok
+                and (gate_passed is None or gate_passed)
+                and likeness_passed
+            )
+            tracker_status = self.guardian_svc.record_generation(
+                ok=gen_ok,
+                backend=str(active_backend_id or (route_meta or {}).get("backend") or "unknown"),
+                quality_score=last_report.score if last_report else None,
+                likeness_score=likeness.get("similarity") if isinstance(likeness, dict) else None,
+                guardian_gate_passed=gate_passed,
+                issues=[i.value for i in last_report.issues] if last_report else [],
+                repair_attempts=quality_attempts,
+                character_id=character_id,
+            )
+            result.setdefault("guardian", {})["success_tracker"] = tracker_status
+
         if self.history and record_history:
             self.history.record("image", result)
         return result

@@ -225,12 +225,28 @@ class TrainingVault:
         *,
         label: str,
         delete_plaintext: bool = True,
+        dry_run: bool = False,
     ) -> dict[str, Any]:
-        """Encrypt legacy plaintext PNG+JSON pairs into vault."""
+        """Encrypt legacy plaintext PNG+JSON pairs into vault.
+
+        When dry_run=True, only report how many files would be migrated —
+        no writes and no plaintext deletion.
+        """
         migrated = 0
+        candidates: list[str] = []
         if not src_dir.is_dir():
-            return {"ok": True, "migrated": 0}
-        for png in src_dir.glob("*.png"):
+            return {
+                "ok": True,
+                "migrated": 0,
+                "label": label,
+                "dry_run": dry_run,
+                "candidates": [],
+            }
+        for png in sorted(src_dir.glob("*.png")):
+            candidates.append(png.name)
+            if dry_run:
+                migrated += 1
+                continue
             meta_path = src_dir / f"{png.stem}.json"
             metadata: dict[str, Any] = {"label": label, "legacy": True}
             if meta_path.is_file():
@@ -243,7 +259,14 @@ class TrainingVault:
             if delete_plaintext:
                 png.unlink(missing_ok=True)
                 meta_path.unlink(missing_ok=True)
-        return {"ok": True, "migrated": migrated, "label": label}
+        return {
+            "ok": True,
+            "migrated": migrated,
+            "label": label,
+            "dry_run": dry_run,
+            "candidates": candidates[:50],
+            "candidate_count": len(candidates),
+        }
 
     def status(self) -> dict[str, Any]:
         counts: dict[str, int] = {}

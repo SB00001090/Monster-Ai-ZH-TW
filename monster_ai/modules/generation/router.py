@@ -73,7 +73,29 @@ BACKENDS: tuple[GenerationBackend, ...] = (
         native_max_height=2048,
         workflow_template="sdxl_txt2img",
     ),
+    GenerationBackend(
+        id="aurora",
+        label="Aurora",
+        label_zh="Aurora",
+        checkpoint_hints=("aurora", "auroraflow", "aurora_v2"),
+        default_vae="ae.safetensors",
+        native_max_width=4096,
+        native_max_height=4096,
+        workflow_template="latent_upscale_txt2img",
+    ),
 )
+
+REPAIR_BACKEND_CHAIN: tuple[str, ...] = ("sd15", "sdxl", "flux", "pony", "aurora")
+
+VAE_FALLBACKS: dict[str, tuple[str, ...]] = {
+    "sd15": ("sd-vae-ft-mse.safetensors", "vae-ft-mse-840000-ema-pruned.safetensors"),
+    "sdxl": ("sdxl_vae.safetensors", "sdxl-vae-fp16-fix.safetensors"),
+    "flux": ("ae.safetensors", "flux-vae.safetensors"),
+    "pony": ("pony_vae.safetensors", "sdxl_vae.safetensors"),
+    "aurora": ("ae.safetensors", "sdxl_vae.safetensors"),
+}
+
+QUALITY_REPAIR_THRESHOLD = 0.70
 
 
 def get_backend(backend_id: str | None) -> GenerationBackend:
@@ -116,6 +138,55 @@ def match_checkpoint(backend: GenerationBackend, available: list[str]) -> str | 
             if hint_l in name.lower():
                 return name
     return None
+
+
+def next_repair_backend(current_id: str | None) -> str | None:
+    """Rotate to next backend when quality < 70%."""
+    current = (current_id or REPAIR_BACKEND_CHAIN[0]).lower()
+    try:
+        idx = REPAIR_BACKEND_CHAIN.index(current)
+    except ValueError:
+        return REPAIR_BACKEND_CHAIN[0]
+    if idx + 1 >= len(REPAIR_BACKEND_CHAIN):
+        return None
+    return REPAIR_BACKEND_CHAIN[idx + 1]
+
+
+def next_repair_vae(backend_id: str, current_vae: str, available_vaes: list[str] | None = None) -> str | None:
+    """Switch VAE within backend before changing checkpoint."""
+    backend = get_backend(backend_id)
+    candidates = VAE_FALLBACKS.get(backend.id, (backend.default_vae,))
+    vaes = available_vaes or []
+    current_l = current_vae.lower()
+    for candidate in candidates:
+        if candidate.lower() == current_l:
+            continue
+        if not vaes or any(candidate.lower() in v.lower() for v in vaes):
+            return candidate
+    for candidate in candidates:
+        if candidate.lower() != current_l:
+            return candidate
+    return None
+
+
+def compute_native_generation_size(
+    backend: GenerationBackend,
+    target_width: int,
+    target_height: int,
+) -> tuple[int, int, float, bool]:
+    """Split target resolution into native pass + latent upscale factor."""
+    if target_width <= backend.native_max_width and target_height <= backend.native_max_height:
+        return target_width, target_height, 1.0, False
+    scale = min(
+        backend.native_max_width / max(target_width, 1),
+        backend.native_max_height / max(target_height, 1),
+    )
+    gen_w = max(512, int(math.floor(target_width * scale)))
+    gen_h = max(512, int(math.floor(target_height * scale)))
+    gen_w -= gen_w % 8
+    gen_h -= gen_h % 8
+    factor = max(1.0, min(2.0, target_width / max(gen_w, 1)))
+    return gen_w, gen_h, round(factor, 3), True
 
 
 def resolve_vae(backend: GenerationBackend, vae: str | None, available_vaes: list[str] | None = None) -> str:
@@ -191,8 +262,15 @@ class GenerationRouter:
             )
 
         w, h, clamp_meta = clamp_resolution(width, height)
-        upscale = w > backend.native_max_width or h > backend.native_max_height
+        gen_w, gen_h, upscale_factor, latent_upscale = compute_native_generation_size(backend, w, h)
         resolved_vae = resolve_vae(backend, vae, available_vaes)
+        workflow_template = (
+            backend.workflow_template if latent_upscale else backend.workflow_template.replace(
+                "latent_upscale_txt2img", "sdxl_txt2img"
+            )
+        )
+        if not latent_upscale and workflow_template == "latent_upscale_txt2img":
+            workflow_template = "sdxl_txt2img" if backend.id != "sd15" else "sd15_txt2img"
 
         return {
             "backend": backend.id,
@@ -201,8 +279,13 @@ class GenerationRouter:
             "vae": resolved_vae,
             "width": w,
             "height": h,
-            "workflow_template": backend.workflow_template,
-            "upscale_recommended": upscale,
+            "native_width": gen_w,
+            "native_height": gen_h,
+            "workflow_template": workflow_template,
+            "upscale_recommended": latent_upscale,
+            "latent_upscale": latent_upscale,
+            "upscale_factor": upscale_factor,
+            "quality_repair_threshold": QUALITY_REPAIR_THRESHOLD,
             "resolution_policy": {
                 "min": {"width": MIN_WIDTH, "height": MIN_HEIGHT},
                 "max": {"width": MAX_WIDTH, "height": MAX_HEIGHT},

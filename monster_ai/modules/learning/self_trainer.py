@@ -56,7 +56,7 @@ Output JSON only:
     {"instruction": "how to defend against X", "output": "defensive guidance for Monster AI users"}
   ]
 }
-Create 3-5 pairs. Relate to MonsterGuard, CallGuard, CrimeGuard when relevant."""
+Create 3-5 pairs. Relate to Guardian Ai, CrimeGuard, self-healing firewall, encrypted vault when relevant."""
 
 STATE_FILE = "state.json"
 LOCK_FILE = "runner.lock"
@@ -139,6 +139,7 @@ class CurriculumRunner:
         self._state = CurriculumState()
         self._task: asyncio.Task | None = None
         self._stop = asyncio.Event()
+        self._resume_pending = False
         self._load_state()
 
     def _state_path(self) -> Path:
@@ -190,7 +191,11 @@ class CurriculumRunner:
             mode=str(data.get("mode", "base")),
         )
         if self._state.running:
+            self._resume_pending = True
             self._state.running = False
+
+    def pending_resume(self) -> bool:
+        return self._resume_pending and self._state.completed_topics < self._state.total_topics
 
     def _save_state(self) -> None:
         self.store.write_json(self._state_path(), self._state.to_dict())
@@ -242,9 +247,7 @@ class CurriculumRunner:
                 "status": self.status(),
             }
 
-        duration = duration_hours or default_hours_for_mode(mode)
-        if mode == "base" and duration_hours is None:
-            duration = self.settings.curriculum_duration_hours
+        duration = duration_hours or default_hours_for_mode(mode, settings=self.settings)
         self._stop.clear()
         if not resume or self._state.completed_topics == 0 or self._state.mode != mode:
             self._state = CurriculumState(
@@ -257,6 +260,7 @@ class CurriculumRunner:
         self._state.duration_hours = duration
         self._state.total_topics = topic_count(mode)
         self._state.mode = mode
+        self._resume_pending = False
         self._save_state()
 
         self._task = asyncio.create_task(self._run_loop(fast_mode=fast_mode, mode=mode))
@@ -267,6 +271,7 @@ class CurriculumRunner:
             "languages": "全球語言",
             "after_ai": "語言+資安（AI 完成後）",
             "cybersec": "資安反制",
+            "cyber": "資安反制",
         }
         label = labels.get(mode, mode)
         return {"ok": True, "message": f"Curriculum started: {label} ({duration}h)", "status": self.status()}
@@ -318,11 +323,23 @@ class CurriculumRunner:
         self._state.training_pairs += 1
 
     async def _process_topic(self, topic: CurriculumTopic, idx: int) -> None:
+        # Pause if Discord user is interacting (slash / select / buttons)
+        try:
+            from monster_ai.modules.discord.guard.interaction_utils import (
+                wait_while_discord_busy,
+            )
+
+            await wait_while_discord_busy(max_wait=20.0)
+        except Exception:  # noqa: BLE001
+            await asyncio.sleep(0)
+
         self._state.current_topic_id = topic.id
         self._state.current_phase = topic.phase
-        self._save_state()
+        await asyncio.to_thread(self._save_state)
+        await asyncio.sleep(0)
 
         learned = await self.web.learn(topic.query_zh, force_refresh=False)
+        await asyncio.sleep(0)
         if not learned.get("ok"):
             self._state.errors += 1
             self._state.last_error = str(learned.get("reason", "web_learn_failed"))
@@ -330,7 +347,9 @@ class CurriculumRunner:
 
         summary = str(learned.get("summary", ""))
         snippets = self.web.retrieve_local(topic.query_zh, limit=6)
+        await asyncio.sleep(0)
         synth = await self._synthesize_training(topic, summary, snippets)
+        await asyncio.sleep(0)
 
         for insight in synth.get("monster_insights") or []:
             ins = str(insight).strip()
@@ -376,8 +395,10 @@ class CurriculumRunner:
                 if self._stop.is_set():
                     break
                 await self._process_topic(topics[idx], idx)
+                await asyncio.sleep(0)
                 if idx < len(topics) - 1 and not self._stop.is_set():
-                    await asyncio.sleep(interval)
+                    # At least 2s gap so Discord interactions always get event-loop time
+                    await asyncio.sleep(max(float(interval), 2.0))
         except asyncio.CancelledError:
             self._state.running = False
             self._save_state()

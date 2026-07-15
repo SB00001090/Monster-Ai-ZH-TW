@@ -33,7 +33,7 @@ def generate_fingerprint(card: dict[str, Any], *, owner_id: str = "local") -> di
         "owner_id": owner_id,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "network_learning_allowed": False,
-        "watermark": f"GDA-{fingerprint[:8].upper()}",
+        "watermark": f"MGA-{fingerprint[:8].upper()}",
     }
 
 
@@ -99,5 +99,20 @@ class OCFingerprintStore:
             except (json.JSONDecodeError, OSError):
                 continue
             if record.get("content_hash") == content_hash:
+                record = dict(record)
+                record["_character_path"] = path.stem
                 return record
         return None
+
+    def find_similar_for_owner(
+        self,
+        content_hash: str,
+        *,
+        owner_id: str,
+    ) -> dict[str, Any] | None:
+        record = self.find_similar(content_hash)
+        if record is None:
+            return None
+        if record.get("owner_id") == owner_id:
+            return None
+        return record

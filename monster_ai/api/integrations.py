@@ -7,6 +7,8 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
+from monster_ai.modules.integrations.sentry_orchestrator import SentryOrchestrator
+
 router = APIRouter(prefix="/api/integrations", tags=["integrations"])
 
 
@@ -52,14 +54,26 @@ async def integrations_status(request: Request) -> dict[str, Any]:
     if mini:
         success = mini.tracker.status()
 
+    guardian_success: dict[str, Any] = {}
+    guardian = getattr(request.app.state, "guardian", None)
+    if guardian is not None:
+        guardian_success = guardian.generation_success_status()
+
     curriculum: dict[str, Any] = {}
     if learning:
         curriculum = learning.curriculum_status()
+
+    workflow_error_configured = bool(
+        settings.dify.workflow_error_id or settings.dify.workflow_multimodal_id
+    )
+    sentry_hook_env = settings.integrations.sentry_webhook_secret_env
 
     return {
         "cloudflare_pages": "https://monster-ai.pages.dev",
         "dify": dify_st,
         "sentry_configured": bool(os.environ.get(settings.integrations.sentry_dsn_env)),
+        "sentry_webhook_configured": bool(os.environ.get(sentry_hook_env)),
+        "workflow_error_configured": workflow_error_configured,
         "make_secret_configured": bool(_make_secret(request)),
         "supabase_configured": _supabase_configured(),
         "google_drive_configured": _google_drive_configured(),
@@ -69,7 +83,9 @@ async def integrations_status(request: Request) -> dict[str, Any]:
             "dual",
         ),
         "mini_success": success,
+        "guardian_success": guardian_success,
         "curriculum": curriculum,
+        "sentry_auto_patch": settings.integrations.sentry_auto_patch_enabled,
         "quality_threshold": settings.dify.min_quality_score,
     }
 
@@ -80,4 +96,37 @@ async def make_deploy_hook(body: MakeHookBody, request: Request) -> dict:
     header = request.headers.get("x-make-secret", "")
     if secret and header != secret:
         raise HTTPException(403, "Invalid Make webhook secret")
+    if body.event == "integrations_snapshot":
+        snapshot = await integrations_status(request)
+        return {"ok": True, "event": body.event, "snapshot": snapshot}
     return {"ok": True, "event": body.event, "detail": body.detail}
+
+
+@router.post("/sentry/hook")
+async def sentry_issue_hook(request: Request) -> dict[str, Any]:
+    """Sentry Issue → Guardian errors/report → Dify workflow → optional auto-patch."""
+    settings = request.app.state.settings
+    orchestrator = SentryOrchestrator(settings.integrations)
+    header = request.headers.get("x-sentry-hook-secret", "")
+    if not orchestrator.verify_secret(header):
+        raise HTTPException(403, "Invalid Sentry webhook secret")
+
+    try:
+        payload = await request.json()
+    except Exception as exc:
+        raise HTTPException(400, "Invalid JSON payload") from exc
+    if not isinstance(payload, dict):
+        raise HTTPException(400, "Expected JSON object")
+
+    guardian = getattr(request.app.state, "guardian", None)
+    if guardian is None or not guardian.settings.enabled:
+        raise HTTPException(503, "Guardian Ai disabled")
+
+    dify = getattr(request.app.state, "dify", None)
+    code_repair = getattr(request.app.state, "code_repair", None)
+    return await orchestrator.handle(
+        payload,
+        guardian_svc=guardian,
+        dify_bridge=dify,
+        code_repair=code_repair,
+    )

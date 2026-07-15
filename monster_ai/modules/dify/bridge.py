@@ -20,6 +20,7 @@ class DifyBridge:
             "configured": self.client.enabled,
             "workflow_image": self.settings.workflow_image_id or None,
             "workflow_multimodal": self.settings.workflow_multimodal_id or None,
+            "workflow_error": self.settings.workflow_error_id or None,
             "min_quality_score": self.settings.min_quality_score,
         }
 
@@ -74,3 +75,37 @@ class DifyBridge:
         result = await fallback_fn()
         result["dify_fallback_reason"] = "empty_workflow_output"
         return result
+
+    async def run_error_workflow(
+        self,
+        *,
+        error_context: str,
+        issue_id: str = "",
+        quality_score: float = 0.0,
+    ) -> dict[str, Any]:
+        """Trigger Dify error/guardian workflow for Sentry → patch orchestration."""
+        if not self.settings.enabled or not self.client.enabled:
+            return {"ok": False, "reason": "dify_disabled"}
+
+        wf_id = self.settings.workflow_error_id or self.settings.workflow_multimodal_id
+        if not wf_id:
+            return {"ok": False, "reason": "workflow_error_id_missing"}
+
+        try:
+            raw = await self.client.run_workflow(
+                wf_id,
+                inputs={
+                    "error_context": error_context[:4000],
+                    "quality_score": quality_score,
+                    "sentry_issue_id": issue_id,
+                },
+            )
+            outputs = (raw.get("data") or {}).get("outputs") or raw.get("outputs") or {}
+            return {
+                "ok": True,
+                "workflow_id": wf_id,
+                "outputs": outputs,
+                "dify": raw,
+            }
+        except Exception as exc:  # noqa: BLE001
+            return {"ok": False, "reason": str(exc)}

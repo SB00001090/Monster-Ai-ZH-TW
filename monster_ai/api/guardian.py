@@ -1,6 +1,8 @@
 """Guardian Ai REST API."""
 from __future__ import annotations
 
+import base64
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -138,6 +140,56 @@ class TrainingTextAssetRequest(BaseModel):
     metadata: dict[str, Any] | None = None
 
 
+class ImageFingerprintRequest(BaseModel):
+    character_id: str = Field(min_length=1)
+    owner_id: str = "local"
+    image_b64: str = Field(min_length=16)
+
+
+class ImageFingerprintCheckRequest(BaseModel):
+    owner_id: str = "local"
+    image_b64: str = Field(min_length=16)
+
+
+class MemoryRememberRequest(BaseModel):
+    text: str = Field(min_length=1)
+    vault_key: str = Field(min_length=8)
+    role: str = "assistant"
+    session_id: str | None = None
+    importance: float = Field(default=0.5, ge=0.0, le=1.0)
+
+
+class MemoryRecallRequest(BaseModel):
+    query: str = Field(min_length=1)
+    vault_key: str = Field(min_length=8)
+    top_k: int = Field(default=5, ge=1, le=20)
+
+
+class MemoryListRequest(BaseModel):
+    vault_key: str = Field(min_length=8)
+    limit: int = Field(default=20, ge=1, le=100)
+
+
+class GuardianCurriculumStartRequest(BaseModel):
+    duration_hours: float | None = Field(default=None, ge=1, le=168)
+    resume: bool = True
+    fast_mode: bool = False
+    mode: str = Field(
+        default="extended",
+        pattern=r"^(base|extended|languages|cybersec|cyber|after_ai)$",
+    )
+
+
+def _decode_image_b64(image_b64: str) -> bytes:
+    raw = image_b64.strip()
+    if "," in raw:
+        raw = raw.split(",", 1)[1]
+    try:
+        return base64.b64decode(raw, validate=True)
+    except Exception as exc:
+        raise HTTPException(400, "Invalid image_b64 payload") from exc
+
+
 def _guardian(request: Request):
     svc = getattr(request.app.state, "guardian", None)
     if svc is None or not svc.settings.enabled:
@@ -155,7 +207,22 @@ def _network_learning(request: Request):
 @router.get("/status")
 async def guardian_status(request: Request) -> dict:
     svc = _guardian(request)
-    return await svc.health()
+    data = await svc.health()
+    learning = getattr(request.app.state, "learning", None)
+    if learning is not None:
+        from monster_ai.modules.learning.curriculum import curriculum_modes_summary, topic_count
+
+        curriculum = learning.curriculum_status()
+        data["curriculum"] = {
+            **curriculum,
+            "enabled": learning.settings.curriculum_enabled,
+            "extended_hours": learning.settings.curriculum_extended_hours,
+            "cybersec_hours": learning.settings.curriculum_cybersec_hours,
+            "extended_topic_count": topic_count("extended"),
+            "cybersec_topic_count": topic_count("cybersec"),
+            "modes": curriculum_modes_summary(),
+        }
+    return data
 
 
 @router.get("/disclaimer")
@@ -239,6 +306,13 @@ async def supervise_learning(request: Request) -> dict:
     return await svc.supervise_learning()
 
 
+@router.post("/learning/eternal-tick")
+async def eternal_learning_tick(request: Request) -> dict:
+    """One eternal background cycle: network learn → Grok supervise → toddler progress."""
+    svc = _guardian(request)
+    return await svc.eternal_learning_tick()
+
+
 @router.get("/learning/directives")
 async def learning_directives(request: Request, limit: int = 5) -> dict:
     svc = _guardian(request)
@@ -249,6 +323,77 @@ async def learning_directives(request: Request, limit: int = 5) -> dict:
 async def protect_oc(body: OCProtectRequest, request: Request) -> dict:
     svc = _guardian(request)
     return svc.protect_oc(body.card, owner_id=body.owner_id)
+
+
+@router.post("/oc/image/register")
+async def register_oc_image(body: ImageFingerprintRequest, request: Request) -> dict:
+    svc = _guardian(request)
+    image_bytes = _decode_image_b64(body.image_b64)
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
+        tmp.write(image_bytes)
+        tmp_path = Path(tmp.name)
+    try:
+        return svc.register_image_fingerprint(
+            character_id=body.character_id,
+            owner_id=body.owner_id,
+            image_path=tmp_path,
+        )
+    finally:
+        tmp_path.unlink(missing_ok=True)
+
+
+@router.post("/oc/image/check")
+async def check_oc_image(body: ImageFingerprintCheckRequest, request: Request) -> dict:
+    svc = _guardian(request)
+    image_bytes = _decode_image_b64(body.image_b64)
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
+        tmp.write(image_bytes)
+        tmp_path = Path(tmp.name)
+    try:
+        return svc.check_image_fingerprint(tmp_path, owner_id=body.owner_id)
+    finally:
+        tmp_path.unlink(missing_ok=True)
+
+
+@router.post("/memory/{character_id}/remember")
+async def memory_remember(
+    character_id: str,
+    body: MemoryRememberRequest,
+    request: Request,
+) -> dict:
+    svc = _guardian(request)
+    return svc.memory_remember(
+        character_id,
+        text=body.text,
+        vault_key=body.vault_key,
+        role=body.role,
+        session_id=body.session_id,
+    )
+
+
+@router.post("/memory/{character_id}/recall")
+async def memory_recall(
+    character_id: str,
+    body: MemoryRecallRequest,
+    request: Request,
+) -> dict:
+    svc = _guardian(request)
+    return svc.memory_recall(
+        character_id,
+        query=body.query,
+        vault_key=body.vault_key,
+        top_k=body.top_k,
+    )
+
+
+@router.post("/memory/{character_id}/list")
+async def memory_list(
+    character_id: str,
+    body: MemoryListRequest,
+    request: Request,
+) -> dict:
+    svc = _guardian(request)
+    return svc.memory_list(character_id, vault_key=body.vault_key, limit=body.limit)
 
 
 @router.post("/backstory/generate")
@@ -281,13 +426,103 @@ async def quality_gate(body: QualityGateRequest, request: Request) -> dict:
     return svc.quality_gate(body.score)
 
 
+@router.get("/generation/success")
+async def generation_success_status(request: Request) -> dict:
+    svc = _guardian(request)
+    return {"ok": True, **svc.generation_success_status()}
+
+
+@router.get("/learning/curriculum/status")
+async def guardian_curriculum_status(request: Request) -> dict:
+    learning = getattr(request.app.state, "learning", None)
+    if learning is None:
+        raise HTTPException(503, "Learning engine unavailable")
+    from monster_ai.modules.learning.curriculum import curriculum_modes_summary, topic_count
+
+    status = learning.curriculum_status()
+    return {
+        "ok": True,
+        "developer": "Developed by Suckbob | Guardian Ai",
+        **status,
+        "modes": curriculum_modes_summary(),
+        "extended_topic_count": topic_count("extended"),
+        "cybersec_topic_count": topic_count("cybersec"),
+    }
+
+
+@router.get("/learning/curriculum/topics")
+async def guardian_curriculum_topics(request: Request, mode: str = "extended") -> dict:
+    from monster_ai.modules.learning.curriculum import (
+        build_curriculum,
+        default_hours_for_mode,
+        topic_count,
+    )
+
+    learning = getattr(request.app.state, "learning", None)
+    settings = learning.settings if learning is not None else None
+    phases = build_curriculum(mode)
+    return {
+        "ok": True,
+        "mode": mode,
+        "total_topics": topic_count(mode),
+        "duration_hours_default": default_hours_for_mode(mode, settings=settings),
+        "phases": [
+            {
+                "id": p.id,
+                "title": p.title,
+                "hours": p.hours,
+                "topic_count": len(p.topics),
+                "tracks": sorted({t.track for t in p.topics}),
+                "topics": [
+                    {"id": t.id, "query_zh": t.query_zh, "track": t.track} for t in p.topics
+                ],
+            }
+            for p in phases
+        ],
+    }
+
+
+@router.post("/learning/curriculum/start")
+async def guardian_curriculum_start(
+    body: GuardianCurriculumStartRequest,
+    request: Request,
+) -> dict:
+    _guardian(request)
+    learning = getattr(request.app.state, "learning", None)
+    if learning is None:
+        raise HTTPException(503, "Learning engine unavailable")
+    if not learning.settings.curriculum_enabled:
+        raise HTTPException(503, "Curriculum disabled")
+    crimeguard = getattr(request.app.state, "crimeguard", None)
+    if crimeguard is not None and crimeguard.state.network_locked:
+        raise HTTPException(403, "Network locked by CrimeGuard")
+    return await learning.start_curriculum(
+        duration_hours=body.duration_hours,
+        resume=body.resume,
+        fast_mode=body.fast_mode,
+        mode=body.mode,
+    )
+
+
+@router.post("/learning/curriculum/stop")
+async def guardian_curriculum_stop(request: Request) -> dict:
+    _guardian(request)
+    learning = getattr(request.app.state, "learning", None)
+    if learning is None:
+        raise HTTPException(503, "Learning engine unavailable")
+    return await learning.stop_curriculum()
+
+
 @router.get("/training/status")
 async def training_status(request: Request) -> dict:
     svc = _guardian(request)
     vault_status = svc.training_vault.status() if svc.training_vault else None
+    encrypted = bool(vault_status and vault_status.get("encrypted"))
     return {
         "training_encryption_enabled": svc.settings.training_encryption_enabled,
         "encrypt_quality_assets": svc.settings.encrypt_quality_assets,
+        "encrypted": encrypted,
+        "plaintext_forbidden": svc.settings.encrypt_quality_assets,
         "vault": vault_status,
     }
 
@@ -304,11 +539,28 @@ async def training_lock(request: Request) -> dict:
     return svc.lock_training_vault()
 
 
+class TrainingMigrateRequest(BaseModel):
+    """Encrypt legacy plaintext good/bad images into the training vault."""
+
+    dry_run: bool = True  # safe default: preview only
+
+
 @router.post("/training/migrate")
-async def training_migrate(request: Request) -> dict:
+async def training_migrate(
+    request: Request,
+    body: TrainingMigrateRequest = TrainingMigrateRequest(),
+) -> dict:
+    """Migrate plaintext quality images → encrypted training vault (.mgtrain).
+
+    Default dry_run=true so accidental POSTs never delete plaintext.
+    Pass {\"dry_run\": false} to perform the real migration.
+    """
     svc = _guardian(request)
     settings = request.app.state.settings
-    return svc.migrate_training_assets(Path(settings.modules.image.quality.data_dir))
+    return svc.migrate_training_assets(
+        Path(settings.modules.image.quality.data_dir),
+        dry_run=bool(body.dry_run),
+    )
 
 
 @router.post("/training/store-text")
@@ -529,3 +781,55 @@ async def account_discord_webhook(
 async def account_status(request: Request, account_id: str) -> dict:
     svc = _guardian(request)
     return svc.account_status(account_id)
+
+
+class QuarantineReleaseRequest(BaseModel):
+    entry_id: str = Field(min_length=8)
+
+
+class VoiceFingerprintRequest(BaseModel):
+    phone_number: str = Field(min_length=3)
+    voice_hash: str = Field(min_length=8)
+    caller_label: str = ""
+
+
+def _firewall(request: Request):
+    return request.app.state.firewall
+
+
+@router.get("/firewall/status")
+async def guardian_firewall_status(request: Request) -> dict:
+    fw = _firewall(request)
+    return {
+        "ok": True,
+        "developer": "Developed by Suckbob | Guardian Ai",
+        **fw.to_dict(),
+    }
+
+
+@router.post("/firewall/quarantine/release")
+async def guardian_quarantine_release(body: QuarantineReleaseRequest, request: Request) -> dict:
+    fw = _firewall(request)
+    return fw.release_quarantine(body.entry_id)
+
+
+@router.post("/firewall/rules/self-heal")
+async def guardian_firewall_self_heal(request: Request) -> dict:
+    fw = _firewall(request)
+    return fw.self_heal_rules()
+
+
+@router.get("/firewall/quarantine")
+async def guardian_quarantine_list(request: Request, limit: int = 20) -> dict:
+    fw = _firewall(request)
+    return {"entries": fw.quarantine.list_active(limit=limit)}
+
+
+@router.post("/security/voice-fingerprint")
+async def guardian_voice_fingerprint(body: VoiceFingerprintRequest, request: Request) -> dict:
+    fw = _firewall(request)
+    return fw.register_voice_fingerprint(
+        phone_number=body.phone_number,
+        voice_hash=body.voice_hash,
+        caller_label=body.caller_label,
+    )

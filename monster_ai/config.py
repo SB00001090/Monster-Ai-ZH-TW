@@ -51,6 +51,8 @@ class LearningSettings(BaseModel):
     roleplay_web_auto_search: bool = True
     curriculum_enabled: bool = True
     curriculum_duration_hours: float = 36.0
+    curriculum_extended_hours: float = 72.0
+    curriculum_cybersec_hours: float = 24.0
     curriculum_auto_start: bool = False
 
 
@@ -144,6 +146,7 @@ class DifySettings(BaseModel):
     api_key_env: str = "DIFY_API_KEY"
     workflow_image_id: str = ""
     workflow_multimodal_id: str = ""
+    workflow_error_id: str = ""
     min_quality_score: float = 0.70
     fallback_to_monster: bool = True
 
@@ -153,7 +156,9 @@ class IntegrationsSettings(BaseModel):
 
     make_webhook_secret_env: str = "MAKE_WEBHOOK_SECRET"
     sentry_dsn_env: str = "SENTRY_DSN"
+    sentry_webhook_secret_env: str = "SENTRY_WEBHOOK_SECRET"
     sentry_enabled: bool = False
+    sentry_auto_patch_enabled: bool = True
     jam_enabled: bool = False
     ahrefs_enabled: bool = False
 
@@ -252,6 +257,9 @@ class GuardSettings(BaseModel):
     trial_days: int = 7
     welcome_intro_enabled: bool = True
     welcome_intro_style: str = "cyberpunk"  # guardian | cyberpunk | privacy
+    auto_tutorial_enabled: bool = True
+    auto_tutorial_on_guild_join: bool = True
+    auto_tutorial_on_setup: bool = True
 
 
 class DiscordModuleSettings(ModuleToggle):
@@ -456,12 +464,14 @@ class GuardianNetworkLearningSettings(BaseModel):
 
     enabled: bool = False
     require_grok_approval: bool = True
-    schedule_windows: list[str] = Field(default_factory=lambda: ["02:00-05:00"])
+    schedule_windows: list[str] = Field(default_factory=lambda: ["00:00-23:59"])
     max_topics_per_run: int = 3
     allow_anonymous_metrics: bool = False
     art_triage_enabled: bool = True
     background_daemon: bool = True
-    daemon_interval_seconds: int = 1800
+    daemon_interval_seconds: int = 900
+    eternal_continuous: bool = True
+    daemon_min_hours_between_runs: float = 0.25
 
 
 class GuardianSettings(BaseModel):
@@ -491,6 +501,8 @@ class GuardianSettings(BaseModel):
     require_user_passphrase: bool = False
     encrypt_quality_assets: bool = True
     delete_plaintext_after_encrypt: bool = True
+    likeness_enabled: bool = True
+    likeness_target_similarity: float = 0.85
     network_learning: GuardianNetworkLearningSettings = Field(
         default_factory=GuardianNetworkLearningSettings
     )

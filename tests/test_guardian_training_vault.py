@@ -96,3 +96,19 @@ def test_migrate_plaintext_deletes_source(vault_setup, tmp_path: Path) -> None:
     assert r["migrated"] == 1
     assert not src.exists()
     assert vault.list_assets("good")
+
+
+def test_migrate_plaintext_dry_run_keeps_source(vault_setup, tmp_path: Path) -> None:
+    _, _, vault = vault_setup
+    good_dir = tmp_path / "legacy_dry" / "good"
+    good_dir.mkdir(parents=True)
+    src = good_dir / "preview.png"
+    Image.fromarray(np.zeros((8, 8, 3), dtype=np.uint8)).save(src)
+    r = vault.migrate_plaintext_dir(
+        good_dir, label="good", delete_plaintext=True, dry_run=True
+    )
+    assert r["dry_run"] is True
+    assert r["migrated"] == 1
+    assert r["candidate_count"] == 1
+    assert src.exists()
+    assert vault.list_assets("good") == []

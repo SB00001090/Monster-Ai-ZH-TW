@@ -105,7 +105,7 @@ def test_share_create_and_import(client):
     assert imported.status_code == 200
     assert imported.json()["ok"] is True
     assert imported.json()["card"]["name"] == "Luna"
-    assert imported.json()["fingerprint"]["watermark"].startswith("GDA-")
+    assert imported.json()["fingerprint"]["watermark"].startswith("MGA-")
 
 
 def test_account_register_and_discord_link(client):

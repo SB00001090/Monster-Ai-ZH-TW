@@ -28,8 +28,6 @@ DISCLAIMER_ZH = f"""【Guardian Ai 免責聲明】
 
 本應用程式之完整原始實作僅由開發者持有與維護。
 
-7. 自主網絡學習功能預設關閉，須由用戶明確授予同意後方可啟用。啟用後系統可於背景連接網絡擷取公開資訊以改善模型與安全規則，但不得上傳可識別個人資料。
-
 使用本應用程式即表示您已閱讀、理解並同意以上所有條款。"""
 
 DISCLAIMER_EN = f"""Guardian Ai — Disclaimer
@@ -46,8 +44,6 @@ This application is a digital product. Once activated or unlocked through paymen
 
 The complete original implementation is held and maintained solely by the developer.
 
-7. Autonomous network learning is disabled by default and requires explicit user consent before it can be enabled. When enabled, the system may connect to the network in the background to gather public information to improve models and security rules, without uploading personally identifiable data.
-
 By using this application, you acknowledge that you have read, understood, and agreed to all the terms above."""
 
 
@@ -57,13 +53,13 @@ def get_disclaimer(locale: str = "zh-TW") -> dict[str, str]:
             "locale": "en",
             "text": DISCLAIMER_EN,
             "developer": DEVELOPER,
-            "version": "guardian_ai_v2",
+            "version": "guardian_ai_v3",
             "toddler_notice": TODDLER_NOTICE_EN,
         }
     return {
         "locale": locale,
         "text": DISCLAIMER_ZH,
         "developer": DEVELOPER,
-        "version": "guardian_ai_v2",
+        "version": "guardian_ai_v3",
         "toddler_notice": TODDLER_NOTICE_ZH,
     }

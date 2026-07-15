@@ -52,7 +52,10 @@ class GuardianNetworkLearner:
         self._supervisor = supervisor
         self._vault = training_vault
         self._art_triage = art_triage
-        self._scheduler = LearningScheduler(settings.schedule_windows)
+        self._scheduler = LearningScheduler(
+            settings.schedule_windows,
+            min_hours_between_runs=settings.daemon_min_hours_between_runs,
+        )
         self._active = False
 
     def is_active(self) -> bool:
@@ -100,6 +103,9 @@ class GuardianNetworkLearner:
             **consent,
             "art_triage_enabled": self.settings.art_triage_enabled,
             "max_topics_per_run": self.settings.max_topics_per_run,
+            "eternal_continuous": self.settings.eternal_continuous,
+            "background_daemon": self.settings.background_daemon,
+            "daemon_interval_seconds": self.settings.daemon_interval_seconds,
             "schedule": self._scheduler.status(),
             "last_run_at": last_run.get("finished_at") if last_run else None,
             "last_run_ok": last_run.get("ok") if last_run else None,
@@ -132,7 +138,13 @@ class GuardianNetworkLearner:
                 continue
         return out
 
-    async def trigger(self, *, force: bool = False, topics: list[str] | None = None) -> dict[str, Any]:
+    async def trigger(
+        self,
+        *,
+        force: bool = False,
+        eternal: bool = False,
+        topics: list[str] | None = None,
+    ) -> dict[str, Any]:
         consent = self.consent_status()
         last_at = self._last_run_timestamp()
         ok, reason = self._scheduler.should_run(
@@ -140,12 +152,13 @@ class GuardianNetworkLearner:
             enabled=self.settings.enabled,
             last_run_at=last_at,
             force=force,
+            eternal=eternal and self.settings.eternal_continuous,
         )
         if not ok:
             return {"ok": False, "reason": reason}
 
         candidate_topics = topics or list(DEFAULT_TOPICS)
-        window_ok = force or self._scheduler.in_window()
+        window_ok = force or eternal or self._scheduler.in_window()
         review: dict[str, Any]
         if self.settings.require_grok_approval:
             review = await self._supervisor.review_network_learning(

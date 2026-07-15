@@ -158,14 +158,32 @@ class GrokSupervisor:
         return directive
 
     def _network_denied(self, reason: str, topics: list[str]) -> dict[str, Any]:
-        return {
+        directive = {
             "supervisor": "grok",
             "approved": False,
             "topics": [],
             "topic_ids": [topic_anonymous_id(t) for t in topics],
             "reason": reason,
+            "denial_zh": self._denial_reason_zh(reason),
             "reviewed_at": datetime.now(timezone.utc).isoformat(),
         }
+        # Persist denials so UI / Discord can show recent Grok 審批拒絕紀錄
+        try:
+            with self.network_log_path.open("a", encoding="utf-8") as f:
+                f.write(json.dumps(directive, ensure_ascii=False) + "\n")
+        except OSError:
+            pass
+        return directive
+
+    @staticmethod
+    def _denial_reason_zh(reason: str) -> str:
+        mapping = {
+            "consent_required": "需要使用者先同意自主網絡學習",
+            "outside_schedule_window": "目前不在允許的學習時段",
+            "no_topics": "沒有可審批的公開主題",
+            "network_learning_disabled": "自主網絡學習已停用",
+        }
+        return mapping.get(reason, f"Grok 拒絕：{reason}")
 
     async def _llm_network_review(
         self,

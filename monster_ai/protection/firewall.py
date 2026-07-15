@@ -1,10 +1,10 @@
-"""Firewall engine: learning mode, active block, notifications."""
+"""Firewall engine: learning mode, active block, quarantine, voice harassment."""
 from __future__ import annotations
 
 import json
 import time
 from collections import defaultdict, deque
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -15,7 +15,10 @@ from monster_ai.protection.notifications.discord import DiscordNotifier
 from monster_ai.protection.notifications.email import EmailNotifier
 from monster_ai.protection.notifications.hub import NotificationHub, SecurityAlert
 from monster_ai.protection.notifications.webui import WebUINotifier
+from monster_ai.protection.quarantine import QuarantineZone
+from monster_ai.protection.rule_generator import RuleGenerator
 from monster_ai.protection.rules import score_request
+from monster_ai.protection.voice_harassment import VoiceHarassmentDetector
 
 
 @dataclass
@@ -39,6 +42,9 @@ class FirewallEngine:
         base.mkdir(parents=True, exist_ok=True)
 
         self.blocker = Blocker(base / "banlist.json", firewall.ban_duration_minutes)
+        self.quarantine = QuarantineZone(base / "quarantine")
+        self.voice_harassment = VoiceHarassmentDetector(base / "voice", self.blocker)
+        self.rule_generator = RuleGenerator(base, self.quarantine)
         self.learner = LearningAnalyzer(
             base / "learn.jsonl",
             escalate_count=firewall.learn_escalate_count,
@@ -161,6 +167,13 @@ class FirewallEngine:
     ) -> None:
         self.blocker.ban(ip, ",".join(reasons))
         self.state.blocked_count += 1
+        self.quarantine.isolate(
+            ip=ip,
+            path=path,
+            reasons=reasons,
+            score=score,
+            action=action,
+        )
         event = {
             "ip": ip,
             "score": score,
@@ -181,6 +194,25 @@ class FirewallEngine:
             )
         )
 
+    def release_quarantine(self, entry_id: str) -> dict[str, Any]:
+        return self.quarantine.release(entry_id)
+
+    def self_heal_rules(self) -> dict[str, Any]:
+        return self.rule_generator.maybe_generate_from_quarantine()
+
+    def register_voice_fingerprint(
+        self,
+        *,
+        phone_number: str,
+        voice_hash: str,
+        caller_label: str = "",
+    ) -> dict[str, Any]:
+        return self.voice_harassment.register(
+            phone_number=phone_number,
+            voice_hash=voice_hash,
+            caller_label=caller_label,
+        )
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "enabled": self.settings.enabled,
@@ -190,4 +222,7 @@ class FirewallEngine:
             "allowed_count": self.state.allowed_count,
             "active_bans": len(self.blocker.list_bans()),
             "last_event": self.state.last_event,
+            "quarantine": self.quarantine.status(),
+            "voice_harassment": self.voice_harassment.status(),
+            "rule_generator": self.rule_generator.status(),
         }

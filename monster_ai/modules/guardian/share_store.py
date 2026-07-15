@@ -75,6 +75,9 @@ class ShareStore:
             "mode": mode,
             "expires_at": expires_at,
             "created_at": bundle["created_at"],
+            "preview_name": str(card.get("name") or oc_id),
+            "watermark": record.get("watermark"),
+            "fingerprint": record.get("fingerprint"),
         }
         with self.index_path.open("a", encoding="utf-8") as f:
             f.write(json.dumps(index_entry, ensure_ascii=False) + "\n")
@@ -86,6 +89,44 @@ class ShareStore:
             "expires_at": expires_at,
             "watermark": record.get("watermark"),
             "import_hint": "POST /api/guardian/share/import with token + passphrase",
+        }
+
+    def preview_share(self, *, token: str) -> dict[str, Any]:
+        token_hash = self._token_hash(token)
+        if not self.index_path.is_file():
+            return {"ok": False, "reason": "share_not_found"}
+        entry: dict[str, Any] | None = None
+        for line in self.index_path.read_text(encoding="utf-8").strip().splitlines():
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if row.get("token_hash") == token_hash:
+                entry = row
+                break
+        if entry is None:
+            return {"ok": False, "reason": "share_not_found"}
+
+        expires = entry.get("expires_at")
+        expired = False
+        if expires:
+            try:
+                exp_dt = datetime.fromisoformat(str(expires).replace("Z", "+00:00"))
+                expired = exp_dt < datetime.now(timezone.utc)
+            except ValueError:
+                pass
+
+        return {
+            "ok": True,
+            "preview": True,
+            "oc_id": entry.get("oc_id"),
+            "owner_id": entry.get("owner_id"),
+            "mode": entry.get("mode"),
+            "preview_name": entry.get("preview_name"),
+            "watermark": entry.get("watermark"),
+            "expires_at": expires,
+            "expired": expired,
+            "import_requires_passphrase": True,
         }
 
     def import_share(self, *, token: str, passphrase: str) -> dict[str, Any]:

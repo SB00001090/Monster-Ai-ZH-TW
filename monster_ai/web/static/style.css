@@ -197,7 +197,7 @@ header h1 {
   background: var(--surface);
 }
 
-.callguard-badge {
+.guardian-badge {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -209,18 +209,18 @@ header h1 {
   color: var(--muted);
 }
 
-.callguard-dot {
+.guardian-dot {
   width: 0.55rem;
   height: 0.55rem;
   border-radius: 50%;
   background: #64748b;
 }
 
-.callguard-dot.ok { background: #22c55e; }
-.callguard-dot.alert { background: #ef4444; }
-.callguard-dot.off { background: #64748b; }
+.guardian-dot.ok { background: #22c55e; }
+.guardian-dot.alert { background: #ef4444; }
+.guardian-dot.off { background: #64748b; }
 
-.callguard-panel {
+.guardian-panel {
   margin-top: 0.5rem;
   padding: 0.5rem 0.75rem;
   border-radius: 8px;
@@ -229,9 +229,9 @@ header h1 {
   font-size: 0.8rem;
 }
 
-.callguard-panel summary { cursor: pointer; color: var(--muted); }
+.guardian-panel summary { cursor: pointer; color: var(--muted); }
 
-.callguard-events {
+.guardian-events {
   margin: 0.5rem 0 0;
   padding-left: 1.1rem;
   max-height: 120px;

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Any
 
 DEFAULT_DURATION_HOURS = 36
 
@@ -130,7 +131,7 @@ def build_36h_curriculum() -> list[CurriculumPhase]:
                 ("monster-arch", "autonomous AI assistant local-first architecture", "本地優先自主 AI 架構"),
                 ("monster-learn", "self-learning AI feedback loop evolution", "自我學習 AI 進化迴路"),
                 ("monster-guard", "Discord moderation bot AI scam detection", "Discord 防詐 AI 審核"),
-                ("callguard", "phone scam detection CallGuard Android", "電話詐騙偵測 CallGuard"),
+                ("guardian-android", "Guardian Ai Android sync Cloudflare Tunnel USB", "Guardian Ai Android 同步 Tunnel"),
                 ("crimeguard", "CrimeGuard network lock privacy HK", "CrimeGuard 網絡安全鎖"),
                 ("persona-grok", "AI persona uncensored local Grok style", "本地 Grok 風格人格"),
                 ("zh-tw-ai", "Traditional Chinese AI localization zh-TW", "繁體中文 AI 在地化"),
@@ -304,7 +305,11 @@ def build_cybersec_curriculum() -> CurriculumPhase:
         ("cyber-hk-law", "Hong Kong cybersecurity law PCPD data privacy", "香港網路安全與私隱條例"),
         ("cyber-monsterlock", "hardware binding anti-tamper software protection", "硬體綁定防篡改保護"),
         ("cyber-crimeguard", "network lock localhost crime detection AI", "網絡鎖定犯罪偵測 AI"),
-        ("cyber-callguard", "call guard scam phone fraud Android defense", "CallGuard 電話詐騙防禦"),
+        ("cyber-guardian-ai", "Guardian Ai local-first security Grok supervision", "Guardian Ai 本地安全 Grok 監督"),
+        ("cyber-guardian-firewall", "self-healing firewall quarantine voice harassment detection", "自癒防火牆隔離區語音騷擾偵測"),
+        ("cyber-guardian-vault", "AES-256-GCM encrypted chat vault training assets", "AES-256-GCM 加密 vault 訓練庫"),
+        ("cyber-oc-fingerprint", "OC anti-plagiarism pHash image fingerprint MGA watermark", "OC 反抄襲 pHash 圖片指紋 MGA 浮水印"),
+        ("cyber-cloudflare-tunnel", "Cloudflare Tunnel HTTPS remote access no Tailscale QR", "Cloudflare Tunnel 遠端連線"),
         ("cyber-ai-defense", "AI adversarial attack defense model security", "AI 對抗攻擊模型安全防禦"),
         ("cyber-prompt-inject", "LLM prompt injection defense guardrails", "LLM 提示注入防禦"),
         ("cyber-bot-defense", "Discord bot moderation anti-spam anti-scam", "Discord 機器人防詐騙"),
@@ -349,7 +354,19 @@ def topic_count(mode: str = "base") -> int:
     return len(flat_topics(mode=mode))
 
 
-def default_hours_for_mode(mode: str) -> float:
+def default_hours_for_mode(mode: str, *, settings: Any | None = None) -> float:
+    if settings is not None:
+        counts = {
+            "base": float(getattr(settings, "curriculum_duration_hours", 36.0)),
+            "ai": float(getattr(settings, "curriculum_duration_hours", 36.0)),
+            "extended": float(getattr(settings, "curriculum_extended_hours", 72.0)),
+            "full": float(getattr(settings, "curriculum_extended_hours", 72.0)),
+            "languages": 24.0,
+            "after_ai": 48.0,
+            "cybersec": float(getattr(settings, "curriculum_cybersec_hours", 24.0)),
+            "cyber": float(getattr(settings, "curriculum_cybersec_hours", 24.0)),
+        }
+        return counts.get(mode, float(getattr(settings, "curriculum_duration_hours", 36.0)))
     counts = {
         "base": 36.0,
         "ai": 36.0,
@@ -361,3 +378,23 @@ def default_hours_for_mode(mode: str) -> float:
         "cyber": 24.0,
     }
     return counts.get(mode, 36.0)
+
+
+CURRICULUM_MODES: tuple[dict[str, str], ...] = (
+    {"id": "base", "label": "GPT/AI 36h", "topics": "72", "hours": "36"},
+    {"id": "extended", "label": "AI + 語言 + 資安 72h", "topics": "178+", "hours": "72"},
+    {"id": "cybersec", "label": "資安反制", "topics": "50+", "hours": "24"},
+    {"id": "languages", "label": "全球語言", "topics": "60+", "hours": "24"},
+    {"id": "after_ai", "label": "語言 + 資安（AI 完成後）", "topics": "110+", "hours": "48"},
+)
+
+
+def curriculum_modes_summary() -> list[dict[str, Any]]:
+    return [
+        {
+            **mode,
+            "topic_count": topic_count(mode["id"]),
+            "duration_hours_default": default_hours_for_mode(mode["id"]),
+        }
+        for mode in CURRICULUM_MODES
+    ]

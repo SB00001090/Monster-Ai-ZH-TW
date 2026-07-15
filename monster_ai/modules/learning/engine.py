@@ -265,18 +265,49 @@ class LearningEngine:
     ) -> dict[str, Any]:
         if not self.settings.curriculum_enabled:
             return {"ok": False, "reason": "curriculum_disabled"}
+        from monster_ai.modules.learning.curriculum import default_hours_for_mode
+
+        hours = duration_hours
+        if hours is None:
+            hours = default_hours_for_mode(mode, settings=self.settings)
         result = await self.curriculum.start(
-            duration_hours=duration_hours,
+            duration_hours=hours,
             resume=resume,
             fast_mode=fast_mode,
             mode=mode,
         )
         if result.get("ok"):
-            self._log_evolution(event="curriculum_start", duration_hours=duration_hours or 36)
+            self._log_evolution(event="curriculum_start", duration_hours=hours, mode=mode)
         return result
 
     async def stop_curriculum(self) -> dict[str, Any]:
         return await self.curriculum.stop()
+
+    async def resume_curriculum_if_needed(self) -> dict[str, Any]:
+        if not self.settings.curriculum_enabled:
+            return {"ok": False, "reason": "curriculum_disabled"}
+        if self.curriculum.status().get("running"):
+            return {"ok": False, "reason": "already_running"}
+        if self.curriculum.pending_resume():
+            from monster_ai.modules.learning.curriculum import default_hours_for_mode
+
+            mode = str(self.curriculum.status().get("mode") or "extended")
+            return await self.start_curriculum(
+                duration_hours=default_hours_for_mode(mode, settings=self.settings),
+                resume=True,
+                mode=mode,
+            )
+        if self.settings.curriculum_auto_start:
+            if int(self.curriculum.status().get("completed_topics", 0) or 0) > 0:
+                return {"ok": False, "reason": "already_started"}
+            from monster_ai.modules.learning.curriculum import default_hours_for_mode
+
+            return await self.start_curriculum(
+                duration_hours=default_hours_for_mode("extended", settings=self.settings),
+                resume=False,
+                mode="extended",
+            )
+        return {"ok": False, "reason": "nothing_to_resume"}
 
     def curriculum_status(self) -> dict[str, Any]:
         return self.curriculum.status()

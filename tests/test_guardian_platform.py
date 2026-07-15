@@ -42,13 +42,15 @@ def test_disclaimer_hardcoded():
     assert "無論任何原因均不接受退款" in zh["text"]
     assert "支持開發者" in zh["text"]
     assert "幼兒" in zh["text"]
-    assert zh["version"] == "guardian_ai_v2"
+    assert zh["version"] == "guardian_ai_v3"
     assert "幼兒" in zh.get("toddler_notice", "")
+    assert "自主網絡學習" not in zh["text"]
 
     en = get_disclaimer("en")
     assert "toddler" in en["text"].lower()
     assert "No refunds will be accepted" in en["text"]
-    assert en["version"] == "guardian_ai_v2"
+    assert en["version"] == "guardian_ai_v3"
+    assert "Autonomous network learning" not in en["text"]
 
 
 def test_e2e_encrypt_roundtrip():
@@ -73,7 +75,7 @@ def test_oauth_user_hash_stable():
 def test_oc_fingerprint_and_verify():
     card = {"name": "Luna", "description": "moon witch", "worldview": "fantasy"}
     record = generate_fingerprint(card, owner_id="user-1")
-    assert record["watermark"].startswith("GDA-")
+    assert record["watermark"].startswith("MGA-")
     assert verify_ownership(card, record, owner_id="user-1")
 
 
@@ -145,7 +147,9 @@ def test_error_report_and_supervise(client):
 
     sup = client.post("/api/guardian/learning/supervise")
     assert sup.status_code == 200
-    assert sup.json()["supervisor"] == "grok"
+    body = sup.json()
+    assert body["supervisor"] == "grok"
+    assert "priorities" in body
 
 
 def test_quality_gate(client):
@@ -160,7 +164,10 @@ def test_training_status(client):
     assert r.status_code == 200
     data = r.json()
     assert data["training_encryption_enabled"] is True
+    assert data["encrypted"] is True
+    assert data["plaintext_forbidden"] is True
     assert data["vault"]["encrypted"] is True
+    assert data["vault"]["plaintext_forbidden"] is True
 
 
 def test_training_store_text(client):
@@ -184,3 +191,59 @@ def test_oc_protect(client):
     assert r.status_code == 200
     assert r.json()["protected"] is True
     assert "extensions" in r.json()["card"]
+    assert r.json()["fingerprint"]["watermark"].startswith("MGA-")
+
+
+def test_oc_image_fingerprint_register_and_check(client):
+    import base64
+    import io
+
+    from PIL import Image
+
+    buf = io.BytesIO()
+    Image.new("RGB", (64, 64), color=(120, 40, 200)).save(buf, format="PNG")
+    image_b64 = base64.b64encode(buf.getvalue()).decode("ascii")
+
+    reg = client.post(
+        "/api/guardian/oc/image/register",
+        json={"character_id": "c1", "owner_id": "user-a", "image_b64": image_b64},
+    )
+    assert reg.status_code == 200
+    assert reg.json()["ok"] is True
+    assert reg.json()["phash"]
+    assert reg.json()["blocked"] is False
+
+    check = client.post(
+        "/api/guardian/oc/image/check",
+        json={"owner_id": "user-b", "image_b64": image_b64},
+    )
+    assert check.status_code == 200
+    assert check.json()["blocked"] is True
+    assert check.json()["collision"]
+
+
+def test_vector_memory_remember_recall(client):
+    vault_key = "test-vault-key-8"
+    remember = client.post(
+        "/api/guardian/memory/hero-1/remember",
+        json={"text": "喜歡在雨夜巡邏", "vault_key": vault_key, "role": "assistant"},
+    )
+    assert remember.status_code == 200
+    assert remember.json()["ok"] is True
+    assert remember.json()["memory_id"]
+
+    recall = client.post(
+        "/api/guardian/memory/hero-1/recall",
+        json={"query": "雨夜", "vault_key": vault_key, "top_k": 3},
+    )
+    assert recall.status_code == 200
+    assert recall.json()["ok"] is True
+    assert recall.json()["memories"]
+    assert "雨夜" in recall.json()["memories"][0]["text"]
+
+    listed = client.post(
+        "/api/guardian/memory/hero-1/list",
+        json={"vault_key": vault_key, "limit": 10},
+    )
+    assert listed.status_code == 200
+    assert listed.json()["total"] >= 1

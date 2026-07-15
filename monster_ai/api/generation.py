@@ -77,12 +77,18 @@ class ImageRequest(BaseModel):
     width: int | None = None
     height: int | None = None
     style: str | None = None
-    backend: str | None = Field(default=None, description="sd15 | sdxl | flux | pony")
+    backend: str | None = Field(default=None, description="sd15 | sdxl | flux | pony | aurora")
     vae: str | None = Field(default=None, description="VAE filename or auto")
     checkpoint: str | None = None
     enhance_prompt: bool = True
     quality_filter: bool | None = None
     max_quality_retries: int | None = Field(default=None, ge=0, le=5)
+    owner_id: str | None = None
+    character_id: str | None = None
+    reference_image: str | None = Field(
+        default=None,
+        description="Local path to reference portrait for likeness scoring",
+    )
 
 
 class VideoRequest(BaseModel):
@@ -153,6 +159,9 @@ async def generate_image(body: ImageRequest, request: Request) -> dict:
             quality_filter=body.quality_filter,
             max_quality_retries=body.max_quality_retries,
             generation_router=gen_router,
+            owner_id=body.owner_id,
+            character_id=body.character_id,
+            reference_image=body.reference_image,
         )
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(502, str(exc)) from exc

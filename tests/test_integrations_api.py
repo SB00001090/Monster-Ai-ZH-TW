@@ -9,7 +9,10 @@ from monster_ai.config import load_settings
 
 
 @pytest.fixture
-def client() -> TestClient:
+def client(monkeypatch) -> TestClient:
+    monkeypatch.setattr("monster_ai.env_file.load_dotenv", lambda *a, **k: 0)
+    for key in ("MAKE_WEBHOOK_SECRET", "SENTRY_WEBHOOK_SECRET"):
+        monkeypatch.delenv(key, raising=False)
     settings = load_settings()
     settings.protection.monsterlock.enabled = False
     settings.protection.monsterlock.self_destruct_enabled = False
@@ -28,6 +31,8 @@ def test_integrations_status(client: TestClient) -> None:
     assert data["supabase_configured"] is False
     assert "google_drive_configured" in data
     assert "cloud_sync_backend" in data
+    assert "sentry_webhook_configured" in data
+    assert "workflow_error_configured" in data
 
 
 def test_make_deploy_hook_no_secret(client: TestClient) -> None:
@@ -37,6 +42,19 @@ def test_make_deploy_hook_no_secret(client: TestClient) -> None:
     )
     assert r.status_code == 200
     assert r.json()["ok"] is True
+
+
+def test_make_deploy_hook_integrations_snapshot(client: TestClient) -> None:
+    r = client.post(
+        "/api/integrations/make/deploy-hook",
+        json={"event": "integrations_snapshot", "detail": "scheduled"},
+    )
+    assert r.status_code == 200
+    body = r.json()
+    assert body["ok"] is True
+    assert body["event"] == "integrations_snapshot"
+    assert "guardian_success" in body["snapshot"]
+    assert "curriculum" in body["snapshot"]
 
 
 def test_dify_status(client: TestClient) -> None:

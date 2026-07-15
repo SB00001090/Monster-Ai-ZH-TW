@@ -11,9 +11,9 @@ const monsterlockEvents = document.getElementById("monsterlock-events");
 const crimeguardDot = document.getElementById("crimeguard-dot");
 const crimeguardLabel = document.getElementById("crimeguard-label");
 const crimeguardEvents = document.getElementById("crimeguard-events");
-const callguardDot = document.getElementById("callguard-dot");
-const callguardLabel = document.getElementById("callguard-label");
-const callguardEvents = document.getElementById("callguard-events");
+const guardianDot = document.getElementById("guardian-dot");
+const guardianLabel = document.getElementById("guardian-label");
+const guardianEvents = document.getElementById("guardian-events");
 const hardwareTierEl = document.getElementById("hardware-tier");
 
 const PERSONA_KEY = "monster_ai_persona";
@@ -133,36 +133,32 @@ async function fetchCrimeGuard() {
   }
 }
 
-function updateCallGuardUI(cg) {
-  if (!callguardDot || !cg) return;
-  callguardDot.className = "callguard-dot";
-  if (!cg.enabled) {
-    callguardDot.classList.add("off");
-    if (callguardLabel) callguardLabel.textContent = "CallGuard 關閉";
-  } else if (cg.red_dot || cg.rejects_today > 0) {
-    callguardDot.classList.add("alert");
-    if (callguardLabel) callguardLabel.textContent = `拒接 ${cg.rejects_today || 0}`;
+function updateGuardianUI(g) {
+  if (!guardianDot || !g) return;
+  guardianDot.className = "guardian-dot";
+  if (!g.enabled) {
+    guardianDot.classList.add("off");
+    if (guardianLabel) guardianLabel.textContent = "Guardian 關閉";
   } else {
-    callguardDot.classList.add("ok");
-    if (callguardLabel) callguardLabel.textContent = "CallGuard 正常";
+    guardianDot.classList.add("ok");
+    if (guardianLabel) guardianLabel.textContent = "Guardian 就緒";
   }
-  if (!callguardEvents) return;
-  const events = cg.events || [];
-  callguardEvents.innerHTML = events
-    .map((ev) => {
-      const t = new Date((ev.ts || 0) * 1000).toLocaleTimeString();
-      return `<li class="${ev.level || "ok"}">[${t}] ${ev.message || ""}</li>`;
-    })
-    .join("") || "<li>尚無來電事件</li>";
+  if (!guardianEvents) return;
+  const notes = [];
+  if (g.no_tailscale) notes.push("Tunnel only · 無 Tailscale");
+  if (g.no_qr_code) notes.push("無 QR Code");
+  if (g.character_share) notes.push("角色分享已啟用");
+  guardianEvents.innerHTML = notes.map((n) => `<li class="ok">${n}</li>`).join("")
+    || "<li>Guardian Ai 平台運作中</li>";
 }
 
-async function fetchCallGuard() {
+async function fetchGuardian() {
   try {
-    const res = await fetch("/api/callguard/status");
+    const res = await fetch("/api/guardian/status");
     const data = await res.json();
-    updateCallGuardUI(data);
+    updateGuardianUI(data);
   } catch {
-    if (callguardDot) callguardDot.className = "callguard-dot off";
+    if (guardianDot) guardianDot.className = "guardian-dot off";
   }
 }
 
@@ -295,13 +291,13 @@ document.querySelectorAll(".tab").forEach((tab) => {
   });
 });
 
-addBubble("system", "Welcome to Monster AI. All processing stays on your machine.");
+addBubble("system", "Welcome to Guardian Ai. All processing stays on your machine.");
 connect();
 connectSecurityAlerts();
 fetchMonsterLock();
 fetchCrimeGuard();
-fetchCallGuard();
+fetchGuardian();
 setInterval(fetchHealth, 15000);
 setInterval(fetchMonsterLock, 1000);
 setInterval(fetchCrimeGuard, 1000);
-setInterval(fetchCallGuard, 2000);
+setInterval(fetchGuardian, 5000);

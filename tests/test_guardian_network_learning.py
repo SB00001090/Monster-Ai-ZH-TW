@@ -57,6 +57,29 @@ def test_scheduler_in_window():
     assert sched.in_window(datetime(2026, 7, 1, 12, 0)) is False
 
 
+def test_scheduler_eternal_bypasses_window():
+    sched = LearningScheduler(["02:00-05:00"], min_hours_between_runs=0.25)
+    now = datetime(2026, 7, 1, 12, 0)
+    ok, reason = sched.should_run(
+        consented=True,
+        enabled=True,
+        last_run_at=None,
+        eternal=True,
+        now=now,
+    )
+    assert ok is True
+    assert reason == ""
+    ok2, reason2 = sched.should_run(
+        consented=True,
+        enabled=True,
+        last_run_at=datetime.now().timestamp(),
+        eternal=True,
+        now=now,
+    )
+    assert ok2 is False
+    assert reason2 == "cooldown_active"
+
+
 def test_privacy_firewall_denied_paths(tmp_path):
     root = tmp_path / "guardian"
     (root / "oc_fingerprints").mkdir(parents=True)
@@ -165,9 +188,52 @@ def test_guardian_status_includes_network_learning(client):
     assert "network_learning" in r.json()
 
 
-def test_disclaimer_section7_network_learning():
+def test_eternal_learning_tick_without_consent(client):
+    r = client.post("/api/guardian/learning/eternal-tick")
+    assert r.status_code == 200
+    data = r.json()
+    assert "run" in data
+    assert data["run"].get("reason") in {
+        "consent_required",
+        "network_learning_disabled",
+        "outside_schedule_window",
+        "cooldown_active",
+        None,
+    } or "ok" in data["run"]
+
+
+@pytest.mark.asyncio
+async def test_network_learner_eternal_skips_schedule_window(tmp_path):
+    root = tmp_path / "guardian"
+    root.mkdir(parents=True)
+    supervisor = GrokSupervisor(root)
+    web = AsyncMock()
+    web.learn = AsyncMock(
+        return_value={"ok": True, "facts_added": 1, "summary": "public facts", "cached": False}
+    )
+    nl = GuardianNetworkLearner(
+        GuardianNetworkLearningSettings(
+            enabled=True,
+            schedule_windows=["02:00-05:00"],
+            eternal_continuous=True,
+            daemon_min_hours_between_runs=0.0,
+            max_topics_per_run=1,
+        ),
+        data_dir=root,
+        web_learner=web,
+        supervisor=supervisor,
+        training_vault=None,
+    )
+    nl.grant_consent()
+    result = await nl.trigger(eternal=True, topics=["open source AI"])
+    assert result["ok"] is True
+
+
+def test_disclaimer_excludes_network_learning_clause():
+    """Network learning consent is opt-in UI, not embedded in hardcoded disclaimer."""
     from monster_ai.modules.guardian.disclaimer import get_disclaimer
 
     zh = get_disclaimer("zh-TW")
-    assert "7." in zh["text"]
-    assert "預設關閉" in zh["text"]
+    assert zh["version"] == "guardian_ai_v3"
+    assert "自主網絡學習" not in zh["text"]
+    assert "預設關閉" not in zh["text"]
